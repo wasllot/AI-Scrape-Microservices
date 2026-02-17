@@ -16,4 +16,9 @@ return [
         'url' => env('SCRAPER_SERVICE_URL', 'http://scraper-service:8000'),
     ],
 
+    'digitalocean' => [
+        'token' => env('DIGITALOCEAN_TOKEN'),
+        'droplet_id' => env('DIGITALOCEAN_DROPLET_ID'),
+    ],
+
 ];
