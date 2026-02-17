@@ -58,7 +58,6 @@ class GeminiEmbeddingProvider:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-    
 from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
 
 # ... imports ...
