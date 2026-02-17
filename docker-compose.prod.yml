@@ -2,25 +2,21 @@ version: '3.8'
 
 services:
   # ============================================
-  # Traefik - Production SSL Configuration
+  # Traefik - Behind Nginx Proxy
   # ============================================
   traefik:
     command:
-      - "--api.insecure=false" # Disable insecure API in production
+      - "--api.insecure=false"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      # Global HTTP -> HTTPS Redirect
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      # Let's Encrypt Resolver
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory" # Uncomment for testing to avoid rate limits
-      - "--certificatesresolvers.myresolver.acme.email=admin@reinaldotineo.online"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      # Expose Traefik on 8090 -> 80 (internal)
+      # Nginx will proxy pass to localhost:8090
+      - "8090:80"
+      # - "443:443"  <-- DISABLED: SSL handled by Nginx
     volumes:
-      - ./letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   # ============================================
   # AI Service
@@ -31,8 +27,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai-service.rule=Host(`api.reinaldotineo.online`) && PathPrefix(`/ai`)"
-      - "traefik.http.routers.ai-service.entrypoints=websecure"
-      - "traefik.http.routers.ai-service.tls.certresolver=myresolver"
+      - "traefik.http.routers.ai-service.entrypoints=web"
       - "traefik.http.services.ai-service.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.ai-strip-prefix.stripprefix.prefixes=/ai"
       - "traefik.http.routers.ai-service.middlewares=ai-strip-prefix"
@@ -47,8 +42,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.business-core.rule=Host(`api.reinaldotineo.online`) && PathPrefix(`/app`)"
-      - "traefik.http.routers.business-core.entrypoints=websecure"
-      - "traefik.http.routers.business-core.tls.certresolver=myresolver"
+      - "traefik.http.routers.business-core.entrypoints=web"
       - "traefik.http.services.business-core.loadbalancer.server.port=80"
       - "traefik.http.middlewares.business-strip-prefix.stripprefix.prefixes=/app"
       - "traefik.http.routers.business-core.middlewares=business-strip-prefix"
@@ -62,8 +56,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.scraper-service.rule=Host(`api.reinaldotineo.online`) && PathPrefix(`/scraper`)"
-      - "traefik.http.routers.scraper-service.entrypoints=websecure"
-      - "traefik.http.routers.scraper-service.tls.certresolver=myresolver"
+      - "traefik.http.routers.scraper-service.entrypoints=web"
       - "traefik.http.services.scraper-service.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.scraper-strip-prefix.stripprefix.prefixes=/scraper"
       - "traefik.http.routers.scraper-service.middlewares=scraper-strip-prefix"
