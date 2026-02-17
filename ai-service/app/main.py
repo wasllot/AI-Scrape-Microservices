@@ -1,15 +1,49 @@
-"""
-AI & RAG Engine - Main Application
-
-FastAPI application with dependency injection and comprehensive documentation.
-"""
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import os
+import logging
 
-from app.config import settings
+try:
+    from google.api_core.exceptions import ResourceExhausted
+except ImportError:
+    # Fallback if specific exception not available
+    ResourceExhausted = None
+
+# ... imports ...
+
+app = FastAPI(
+    # ... attributes ...
+)
+
+# Global Exception Handler for Rate Limits
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_msg = str(exc)
+    
+    # Check for ResourceExhausted or 429 in message
+    if (ResourceExhausted and isinstance(exc, ResourceExhausted)) or "429" in error_msg or "Resource has been exhausted" in error_msg:
+        logging.warning(f"Rate limit hit: {error_msg}")
+        return JSONResponse(
+            status_code=200, # Return 200 so frontend displays it as a message
+            content={
+                "answer": "⚠️ **Aviso del Asistente:** Lamentablemente, he alcanzado temporalmente mi límite de capacidad cognitiva (API Rate Limit). Por favor, espera unos segundos y vuelve a preguntarme. ¡No te vayas, estoy ansioso por ayudarte! 🤖",
+                "sources": [],
+                "conversation_id": "rate_limited" 
+            }
+        )
+    
+    # Default behavior for other exceptions
+    logging.error(f"Global error: {error_msg}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": error_msg}
+    )
+
+# CORS middleware
+# ...
 from app.rag.embeddings import EmbeddingService
 from app.rag.chat import RAGChatService
 from app.database import get_db_connection, test_connection
