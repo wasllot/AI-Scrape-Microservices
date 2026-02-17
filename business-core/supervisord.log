@@ -4,3 +4,4 @@
 2026-02-17 00:35:38,362 INFO spawned: 'php-fpm' with pid 8
 2026-02-17 00:35:39,456 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
 2026-02-17 00:35:39,457 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-02-17 00:46:34,214 INFO reaped unknown pid 106 (exit status 0)
