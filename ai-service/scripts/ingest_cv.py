@@ -135,31 +135,44 @@ async def ingest_all():
         print("❌ No data to ingest")
         return
 
+    # Check API Key
+    from app.config import settings
+    if not settings.gemini_api_key:
+        print("❌ CRITICAL: GEMINI_API_KEY is missing in settings!")
+        return
+
     # Embed and Save
     embedding_service = EmbeddingService()
     
     try:
-        # Clear previous data (optional, or just append?)
-        # For now, let's clear everything to keep it clean
+        # Clear previous data
         with get_db_connection() as conn:
             conn.execute("DELETE FROM embeddings", fetch_results=False)
             conn.commit()
-            print("Deleted old data")
+            print("🗑️  Deleted old data from 'embeddings' table")
 
         # Ingest new chunks
         print(f"🚀 Ingesting {len(all_chunks)} chunks...")
+        success_count = 0
+        
         for i, chunk in enumerate(all_chunks, 1):
             try:
                 await embedding_service.ingest(
                     content=chunk["content"], 
                     metadata=json.dumps(chunk["metadata"])
                 )
-                print(f"   ✓ Ingested chunk {i}/{len(all_chunks)}")
+                print(f"   ✓ [{i}/{len(all_chunks)}] Ingested")
+                success_count += 1
             except Exception as inner_e:
-                print(f"   ❌ Error ingesting chunk {i}: {inner_e}")
-            
-        print("✅ Data Ingested Successfully!")
+                print(f"   ❌ [{i}/{len(all_chunks)}] Failed: {inner_e}")
         
+        if success_count == 0:
+            print("\n❌ INGESTION FAILED: 0 chunks were stored.")
+        elif success_count < len(all_chunks):
+            print(f"\n⚠️  PARTIAL SUCCESS: {success_count}/{len(all_chunks)} chunks ingested.")
+        else:
+            print(f"\n✅ SUCCESS: All {success_count} chunks ingested!")
+            
     except Exception as e:
         print(f"❌ Error ingesting data: {e}")
 
