@@ -14,6 +14,7 @@ psycopg2-binary==2.9.9
 # Utilities
 numpy==1.26.3
 redis==5.0.1
+pypdf==3.17.4
 
 # Testing
 pytest==7.4.3
