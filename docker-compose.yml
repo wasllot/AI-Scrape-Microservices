@@ -1,0 +1,225 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Traefik - Reverse Proxy
+  # ============================================
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Traefik dashboard
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - microservices
+
+  # ============================================
+  # PostgreSQL with pgvector Extension
+  # ============================================
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: postgres_pgvector
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_MULTIPLE_DATABASES: app_db,vector_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/create-databases.sh:/docker-entrypoint-initdb.d/create-databases.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Redis - Cache & Queue
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - microservices
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ============================================
+  # AI & RAG Engine Service (FastAPI)
+  # ============================================
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=vector_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./ai-service:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai-service.rule=PathPrefix(`/ai`)"
+      - "traefik.http.routers.ai-service.entrypoints=web"
+      - "traefik.http.services.ai-service.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.ai-strip-prefix.stripprefix.prefixes=/ai"
+      - "traefik.http.routers.ai-service.middlewares=ai-strip-prefix"
+
+  # ============================================
+  # Business Core Service (Laravel 11)
+  # ============================================
+  business-core:
+    build:
+      context: ./business-core
+      dockerfile: Dockerfile
+    container_name: business-core
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_KEY=${APP_KEY}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=app_db
+      - DB_USERNAME=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - AI_SERVICE_URL=http://ai-service:8000
+      - SCRAPER_SERVICE_URL=http://scraper-service:8000
+    ports:
+      - "9000:80"
+    volumes:
+      - ./business-core:/var/www/html
+      - laravel_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.business-core.rule=PathPrefix(`/app`)"
+      - "traefik.http.routers.business-core.entrypoints=web"
+      - "traefik.http.services.business-core.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.business-strip-prefix.stripprefix.prefixes=/app"
+      - "traefik.http.routers.business-core.middlewares=business-strip-prefix"
+
+  # ============================================
+  # Queue Worker (Laravel)
+  # ============================================
+  queue-worker:
+    build:
+      context: ./business-core
+      dockerfile: Dockerfile
+    container_name: queue-worker
+    command: php artisan queue:work --tries=3
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_KEY=${APP_KEY}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=app_db
+      - DB_USERNAME=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - AI_SERVICE_URL=http://ai-service:8000
+      - SCRAPER_SERVICE_URL=http://scraper-service:8000
+    volumes:
+      - ./business-core:/var/www/html
+    depends_on:
+      - business-core
+      - redis
+    networks:
+      - microservices
+
+  # ============================================
+  # Universal Scraper Service (FastAPI + Playwright)
+  # ============================================
+  scraper-service:
+    build:
+      context: ./scraper-service
+      dockerfile: Dockerfile
+    container_name: scraper-service
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./scraper-service:/app
+      - scraper_cache:/app/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scraper-service.rule=PathPrefix(`/scraper`)"
+      - "traefik.http.routers.scraper-service.entrypoints=web"
+      - "traefik.http.services.scraper-service.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.scraper-strip-prefix.stripprefix.prefixes=/scraper"
+      - "traefik.http.routers.scraper-service.middlewares=scraper-strip-prefix"
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  microservices:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  laravel_storage:
+    driver: local
+  scraper_cache:
+    driver: local

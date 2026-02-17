@@ -1,0 +1,67 @@
+# GitIgnore for Microservices Project
+
+# ============================================
+# Environment & Secrets
+# ============================================
+.env
+.env.*
+!.env.example
+
+# ============================================
+# AI Service (Python)
+# ============================================
+ai-service/__pycache__/
+ai-service/*.pyc
+ai-service/*.pyo
+ai-service/*.pyd
+ai-service/.Python
+ai-service/venv/
+ai-service/.venv/
+ai-service/.pytest_cache/
+
+# ============================================
+# Scraper Service (Python)
+# ============================================
+scraper-service/__pycache__/
+scraper-service/*.pyc
+scraper-service/*.pyo
+scraper-service/venv/
+scraper-service/.venv/
+scraper-service/cache/
+scraper-service/.pytest_cache/
+
+# ============================================
+# Business Core (Laravel)
+# ============================================
+business-core/vendor/
+business-core/node_modules/
+business-core/storage/*.key
+business-core/storage/framework/
+business-core/storage/logs/
+business-core/bootstrap/cache/*
+business-core/.phpunit.result.cache
+business-core/Homestead.json
+business-core/Homestead.yaml
+business-core/npm-debug.log
+business-core/yarn-error.log
+
+# ============================================
+# Docker
+# ============================================
+.docker/
+docker-compose.override.yml
+
+# ============================================
+# IDE
+# ============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ============================================
+# OS
+# ============================================
+.DS_Store
+Thumbs.db
