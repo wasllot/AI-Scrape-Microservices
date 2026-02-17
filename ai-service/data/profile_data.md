@@ -3,6 +3,18 @@
 ## Resumen Ejecutivo
 Soy un desarrollador de software apasionado por la construcción de sistemas escalables y mantenibles. Mi enfoque combina una sólida base en principios de ingeniería de software con la pragmática necesaria para entregar valor rápidamente. Me especializo en arquitectura de microservicios, desarrollo backend y devops.
 
+## Stack Tecnológico y Experiencia
+
+| Categoría | Tecnologías | Años de Experiencia |
+| :--- | :--- | :--- |
+| **Lenguajes** | PHP, Python, JavaScript, HTML5, CSS3 | 8 años |
+| **Backend** | Laravel, Django | 8 años |
+| **Frontend** | Vue.js, React, Next.js, Tailwind | 4+ años |
+| **Mobile/Modern JS** | TypeScript, Next.js, NestJS | 4+ años |
+| **Bases de Datos** | MySQL, SQL Server, PostgreSQL, MongoDB, Firebase | 8 años |
+| **DevOps** | Git, Docker, Gestión de Servidores (WHM/GCP) | 8 años |
+| **E-commerce** | PrestaShop, WordPress | 4+ años |
+
 ## Filosofía Técnica
 
 ### Clean Code y SOLID
