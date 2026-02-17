@@ -59,12 +59,13 @@ class GeminiEmbeddingProvider:
         # Configure Gemini
         genai.configure(api_key=self.api_key)
     
-    def generate_embedding(self, text: str) -> List[float]:
+    def generate_embedding(self, text: str, task_type: str = "retrieval_document") -> List[float]:
         """
         Generate embedding using Gemini API.
         
         Args:
             text: Text to embed
+            task_type: Type of task (retrieval_document, retrieval_query, etc.)
             
         Returns:
             Embedding vector
@@ -76,7 +77,7 @@ class GeminiEmbeddingProvider:
             result = genai.embed_content(
                 model=self.model_name,
                 content=text,
-                task_type="retrieval_document"
+                task_type=task_type
             )
             return result['embedding']
         except Exception as e:
@@ -273,7 +274,7 @@ class EmbeddingService:
             List of similar documents
         """
         # Generate query embedding
-        query_embedding = self.provider.generate_embedding(query)
+        query_embedding = self.provider.generate_embedding(query, task_type="retrieval_query")
         
         # Search in repository
         results = self.repository.find_similar(
