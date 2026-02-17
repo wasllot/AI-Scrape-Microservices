@@ -10,7 +10,9 @@ try:
     from google.api_core.exceptions import ResourceExhausted
 except ImportError:
     # Fallback if specific exception not available
-    ResourceExhausted = None
+    resourceExhausted = None
+
+from app.config import settings
 
 # ... imports ...
 
