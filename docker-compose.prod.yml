@@ -47,6 +47,10 @@ services:
       - "traefik.http.services.business-core.loadbalancer.server.port=80"
       - "traefik.http.middlewares.business-strip-prefix.stripprefix.prefixes=/app"
       - "traefik.http.routers.business-core.middlewares=business-strip-prefix"
+      # Router for direct /api access (no strip prefix, so Laravel receives /api/...)
+      - "traefik.http.routers.business-core-api.rule=Host(`api.reinaldotineo.online`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.business-core-api.entrypoints=web"
+      - "traefik.http.routers.business-core-api.service=business-core"
 
   # ============================================
   # Scraper Service
