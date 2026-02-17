@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', [HealthController::class, 'index']);
 Route::get('/system-status', [SystemHealthController::class, 'check']);
 Route::post('/chat', [ChatController::class, 'chat']);
+Route::post('/chat/welcome', [ChatController::class, 'welcome']);
 
 Route::prefix('scrape')->group(function () {
     Route::post('/learn', [ScrapeController::class, 'scrapeAndLearn']);

@@ -86,4 +86,48 @@ class ChatController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/chat/welcome",
+     *     tags={"AI Chat"},
+     *     summary="Get Smart Welcome Message",
+     *     description="Generates a contextual welcome message for new or returning users.",
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="conversation_id", type="string", format="uuid", description="Optional conversation ID")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Hola! Soy el asistente..."),
+     *             @OA\Property(property="conversation_id", type="string", format="uuid")
+     *         )
+     *     )
+     * )
+     */
+    public function welcome(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'conversation_id' => 'nullable|string|uuid',
+        ]);
+
+        try {
+            $response = $this->aiService->getWelcomeMessage(
+                $validated['conversation_id'] ?? null
+            );
+
+            return response()->json($response);
+
+        } catch (\Exception $e) {
+            Log::error('Welcome message error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => '¡Hola! Soy el asistente virtual de Reinaldo. ¿En qué puedo ayudarte hoy?',
+                'conversation_id' => null
+            ]);
+        }
+    }
 }

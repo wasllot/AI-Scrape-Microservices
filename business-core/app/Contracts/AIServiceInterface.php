@@ -28,12 +28,20 @@ interface AIServiceInterface
      * @param string|null $conversationId Optional conversation ID
      * @param int $maxContextItems Number of context items to retrieve
      * @return array Response with answer and sources
-     * @throws \Exception
+     * @throws \Exception If chat fails
      */
     public function chat(string $question, ?string $conversationId = null, int $maxContextItems = 5): array;
 
     /**
-     * Check AI service health
+     * Get a smart welcome message.
+     * 
+     * @param string|null $conversationId Optional conversation ID
+     * @return array Response with message and conversation_id
+     */
+    public function getWelcomeMessage(?string $conversationId = null): array;
+
+    /**
+     * Check if AI service is healthy.
      * 
      * @return bool
      */

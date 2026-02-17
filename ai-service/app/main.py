@@ -406,6 +406,42 @@ async def chat(
         )
 
 
+class WelcomeRequest(BaseModel):
+    """Request model for welcome message"""
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="ID de conversación opcional para recuperar contexto"
+    )
+
+class WelcomeResponse(BaseModel):
+    """Response model for welcome message"""
+    message: str = Field(..., description="Mensaje de bienvenida generado")
+    conversation_id: str = Field(..., description="ID de la conversación")
+
+
+@app.post(
+    "/chat/welcome",
+    response_model=WelcomeResponse,
+    summary="Mensaje de Bienvenida",
+    description="Genera un saludo inteligente, nuevo o de retorno",
+    tags=["RAG Chat"]
+)
+async def welcome_message(
+    request: WelcomeRequest,
+    service: RAGChatService = Depends(get_chat_service)
+):
+    """
+    Endpoint para obtener mensaje de bienvenida.
+    """
+    try:
+        response = await service.generate_welcome(
+            conversation_id=request.conversation_id
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.delete(
     "/embeddings/{embedding_id}",
     summary="Eliminar Embedding",

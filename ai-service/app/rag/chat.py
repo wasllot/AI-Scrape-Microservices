@@ -453,3 +453,38 @@ class RAGChatService:
             "sources": sources,
             "conversation_id": conversation_id
         }
+
+    async def generate_welcome(self, conversation_id: Optional[str] = None) -> Dict:
+        """
+        Generate a smart welcome message.
+        
+        Args:
+            conversation_id: Optional existing conversation ID
+            
+        Returns:
+            Dict with welcome message and conversation ID
+        """
+        if not conversation_id:
+            conversation_id = str(uuid.uuid4())
+            
+        # Check if conversation exists (has history)
+        history = self.conversation_store.get_history(conversation_id)
+        
+        if history:
+            prompt = """Eres el asistente virtual de Reinaldo Tineo.
+            El usuario ha regresado a una conversación previa.
+            Genera un saludo breve y cordial ("Bienvenido de nuevo...") invitándole a continuar la charla.
+            Sé conciso (máximo 2 frases)."""
+        else:
+            prompt = """Eres el asistente virtual de Reinaldo Tineo.
+            Un nuevo usuario acaba de iniciar el chat.
+            Genera un saludo profesional, entusiasta y breve.
+            Preséntate rápidamente indicando que puedes responder preguntas sobre la experiencia y habilidades de Reinaldo.
+            (Máximo 2 frases)."""
+            
+        welcome_message = self.llm_provider.generate_response(prompt)
+        
+        return {
+            "message": welcome_message,
+            "conversation_id": conversation_id
+        }

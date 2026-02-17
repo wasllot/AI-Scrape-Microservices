@@ -104,6 +104,31 @@ class AIServiceClient implements AIServiceInterface
     /**
      * {@inheritDoc}
      */
+    public function getWelcomeMessage(?string $conversationId = null): array
+    {
+        $url = "{$this->baseUrl}/chat/welcome";
+
+        $data = [];
+        if ($conversationId) {
+            $data['conversation_id'] = $conversationId;
+        }
+
+        try {
+            $response = $this->httpClient->post($url, $data);
+            return $response;
+        } catch (\Exception $e) {
+            // Fallback welcome message if AI service fails
+            Log::error('AI welcome failed', ['error' => $e->getMessage()]);
+            return [
+                'message' => '¡Hola! Soy el asistente virtual de Reinaldo. ¿En qué puedo ayudarte hoy?',
+                'conversation_id' => $conversationId
+            ];
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isHealthy(): bool
     {
         $url = "{$this->baseUrl}/health";
