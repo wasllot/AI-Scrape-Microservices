@@ -22,6 +22,7 @@ services:
   # AI Service
   # ============================================
   ai-service:
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--root-path", "/ai" ]
     environment:
       - APP_ENV=production
     labels:
@@ -51,6 +52,7 @@ services:
   # Scraper Service
   # ============================================
   scraper-service:
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--root-path", "/scraper" ]
     environment:
       - APP_ENV=production
     labels:
