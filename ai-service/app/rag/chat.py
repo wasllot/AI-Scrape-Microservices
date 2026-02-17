@@ -45,6 +45,15 @@ class GeminiLLMProvider:
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name)
     
+from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+    # ... imports ...
+
+    @retry(
+        wait=wait_random_exponential(min=1, max=60),
+        stop=stop_after_attempt(6),
+        reraise=True
+    )
     def generate_response(self, prompt: str) -> str:
         """
         Generate response using Gemini.

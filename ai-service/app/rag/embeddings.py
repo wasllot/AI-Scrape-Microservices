@@ -59,6 +59,15 @@ class GeminiEmbeddingProvider:
         # Configure Gemini
         genai.configure(api_key=self.api_key)
     
+from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
+
+# ... imports ...
+
+    @retry(
+        wait=wait_random_exponential(min=1, max=60),
+        stop=stop_after_attempt(6),
+        reraise=True
+    )
     def generate_embedding(self, text: str, task_type: str = "retrieval_document") -> List[float]:
         """
         Generate embedding using Gemini API.
@@ -71,7 +80,7 @@ class GeminiEmbeddingProvider:
             Embedding vector
             
         Raises:
-            Exception: If API call fails
+            Exception: If API call fails (after retries)
         """
         try:
             result = genai.embed_content(
@@ -81,7 +90,8 @@ class GeminiEmbeddingProvider:
             )
             return result['embedding']
         except Exception as e:
-            raise Exception(f"Error generating embedding: {str(e)}")
+            # Let tenacity handle the retry or re-raise if attempts exhausted
+            raise e
     
     @property
     def dimension(self) -> int:
