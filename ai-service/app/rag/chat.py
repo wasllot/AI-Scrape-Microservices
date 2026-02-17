@@ -7,8 +7,10 @@ following Single Responsibility and Dependency Inversion principles.
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Protocol
 import uuid
+import random
 from datetime import datetime
 import google.generativeai as genai
+from groq import Groq
 from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from app.config import settings
@@ -61,8 +63,44 @@ class GeminiLLMProvider:
         Returns:
             Generated text
         """
-        response = self.model.generate_content(prompt)
-        return response.text
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            # Check if block reason exists (safety filters)
+            if hasattr(e, 'response') and hasattr(e.response, 'prompt_feedback'):
+                print(f"Gemini Refusal: {e.response.prompt_feedback}")
+            raise e
+
+
+class GroqLLMProvider:
+    """
+    Groq implementation of LLM provider (Fallback).
+    """
+    
+    def __init__(self, api_key: str = None, model_name: str = None):
+        self.api_key = api_key or settings.groq_api_key
+        self.model = model_name or settings.groq_model
+        self.client = Groq(api_key=self.api_key)
+
+    def generate_response(self, prompt: str) -> str:
+        """
+        Generate response using Groq (Llama 3).
+        """
+        try:
+            chat_completion = self.client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                model=self.model,
+            )
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            print(f"Groq Error: {str(e)}")
+            raise e
 
 
 class ConversationStore(ABC):
@@ -140,9 +178,6 @@ class InMemoryConversationStore(ConversationStore):
         Args:
             conversation_id: Conversation identifier
             limit: Maximum turns to return
-            
-        Returns:
-            List of conversation turns
         """
         history = self._conversations.get(conversation_id, [])
         return history[-limit:]
@@ -387,9 +422,16 @@ class RAGChatService:
             prompt_builder: Builder for prompts
         """
         self.embedding_service = embedding_service
-        self.llm_provider = llm_provider or GeminiLLMProvider()
         self.conversation_store = conversation_store or PostgresConversationStore()
         self.prompt_builder = prompt_builder or PromptBuilder()
+        
+        # Initialize Primary Provider (Gemini)
+        self.primary_llm = llm_provider or GeminiLLMProvider()
+        
+        # Initialize Secondary Provider (Groq) if key is available
+        self.secondary_llm = None
+        if settings.groq_api_key:
+            self.secondary_llm = GroqLLMProvider()
     
     async def generate_response(
         self,
@@ -398,7 +440,7 @@ class RAGChatService:
         max_context_items: int = 5
     ) -> Dict:
         """
-        Generate RAG response.
+        Generate RAG response with Fallback mechanism.
         
         Args:
             question: User question
@@ -431,8 +473,16 @@ class RAGChatService:
             history=history_text
         )
         
-        # Step 4: Generate response
-        answer = self.llm_provider.generate_response(prompt)
+        # Step 4: Generate response with Fallback
+        try:
+            answer = self.primary_llm.generate_response(prompt)
+        except Exception as e:
+            if self.secondary_llm:
+                print(f"⚠️ Primary LLM failed ({str(e)}). Switching to Groq/Llama3 backup.")
+                answer = self.secondary_llm.generate_response(prompt)
+                answer += "\n\n_(Respuesta generada por el sistema de respaldo)_" 
+            else:
+                raise e
         
         # Step 5: Save conversation turn
         self.conversation_store.save_turn(
@@ -462,7 +512,8 @@ class RAGChatService:
 
     async def generate_welcome(self, conversation_id: Optional[str] = None) -> Dict:
         """
-        Generate a smart welcome message.
+        Generate a smart welcome message using STATIC TEMPLATES.
+        (Optimization Option A to save Tokens)
         
         Args:
             conversation_id: Optional existing conversation ID
@@ -477,18 +528,19 @@ class RAGChatService:
         history = self.conversation_store.get_history(conversation_id)
         
         if history:
-            prompt = """Eres el asistente virtual de Reinaldo Tineo.
-            El usuario ha regresado a una conversación previa.
-            Genera un saludo breve y cordial ("Bienvenido de nuevo...") invitándole a continuar la charla.
-            Sé conciso (máximo 2 frases)."""
+            messages = [
+                "¡Bienvenido de nuevo! ¿En qué más puedo ayudarte sobre la experiencia de Reinaldo?",
+                "¡Hola otra vez! Recuerdo nuestra charla anterior. ¿Quieres profundizar más?",
+                "¡Qué bueno verte de nuevo! ¿Tienes alguna otra consulta sobre el perfil de Reinaldo?"
+            ]
         else:
-            prompt = """Eres el asistente virtual de Reinaldo Tineo.
-            Un nuevo usuario acaba de iniciar el chat.
-            Genera un saludo profesional, entusiasta y breve.
-            Preséntate rápidamente indicando que puedes responder preguntas sobre la experiencia y habilidades de Reinaldo.
-            (Máximo 2 frases)."""
+            messages = [
+                "¡Hola! Soy el asistente virtual de Reinaldo Tineo. Puedo contarte todo sobre su experiencia en Full Stack, Microservicios y más. ¿Por dónde empezamos?",
+                "¡Bienvenido! Estoy entrenado para responder preguntas sobre la carrera de Reinaldo. ¿Te interesa saber sobre sus proyectos más recientes?",
+                "¡Un gusto saludarte! Soy un asistente IA especializado en el perfil de Reinaldo. ¿Tienes preguntas sobre su experiencia con PHP, Python o Docker?"
+            ]
             
-        welcome_message = self.llm_provider.generate_response(prompt)
+        welcome_message = random.choice(messages)
         
         return {
             "message": welcome_message,

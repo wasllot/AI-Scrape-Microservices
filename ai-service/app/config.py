@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     
     # AI Configuration
     gemini_api_key: str = Field(..., env="GEMINI_API_KEY")
+    groq_api_key: Optional[str] = Field(default=None, env="GROQ_API_KEY")
+    groq_model: str = Field(default="llama3-8b-8192", env="GROQ_MODEL")
     embedding_model: str = Field(default="models/gemini-embedding-001", env="EMBEDDING_MODEL")
     chat_model: str = Field(default="models/gemini-2.5-flash", env="CHAT_MODEL")
     embedding_dimension: int = Field(default=3072, env="EMBEDDING_DIMENSION")
