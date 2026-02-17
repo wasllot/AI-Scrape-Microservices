@@ -439,6 +439,8 @@ class RAGChatService:
         sources = [
             {
                 "id": doc["id"],
+                "content": doc["content"],  # Full content
+                "text": doc["content"],     # Alias for compatibility
                 "content_preview": doc["content"][:200] + "..." if len(doc["content"]) > 200 else doc["content"],
                 "similarity": float(doc["similarity"]),
                 "metadata": doc.get("metadata", {})
