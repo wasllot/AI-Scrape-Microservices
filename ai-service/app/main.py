@@ -426,20 +426,13 @@ async def chat(
     Raises:
         HTTPException: Si falla la generación
     """
-    try:
-        response = await service.generate_response(
-            question=request.question,
-            conversation_id=request.conversation_id,
-            max_context_items=request.max_context_items
-        )
-        
-        return response
+    response = await service.generate_response(
+        question=request.question,
+        conversation_id=request.conversation_id,
+        max_context_items=request.max_context_items
+    )
     
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Chat failed: {str(e)}"
-        )
+    return response
 
 
 class WelcomeRequest(BaseModel):
