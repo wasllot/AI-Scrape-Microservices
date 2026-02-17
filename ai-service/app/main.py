@@ -79,23 +79,25 @@ def run_migrations():
     print(f"\n🔄 Running {len(migration_files)} migration(s)...")
     
     db = get_db_connection()
-    db._ensure_connection()
     
-    for migration_file in migration_files:
-        try:
-            with open(migration_file, 'r', encoding='utf-8') as f:
-                sql = f.read()
-            
-            # Execute migration using raw cursor (DDL doesn't return results)
-            db._cursor.execute(sql)
-            db.commit()
-            print(f"✓ Applied: {migration_file.name}")
-            
-        except Exception as e:
-            print(f"✗ Failed to apply {migration_file.name}: {e}")
-            raise
-        finally:
-            db.close()
+    try:
+        db._ensure_connection()
+        
+        for migration_file in migration_files:
+            try:
+                with open(migration_file, 'r', encoding='utf-8') as f:
+                    sql = f.read()
+                
+                # Execute migration using raw cursor (DDL doesn't return results)
+                db._cursor.execute(sql)
+                db.commit()
+                print(f"✓ Applied: {migration_file.name}")
+                
+            except Exception as e:
+                print(f"✗ Failed to apply {migration_file.name}: {e}")
+                raise
+    finally:
+        db.close()
     
     print("✓ All migrations completed\n")
 
