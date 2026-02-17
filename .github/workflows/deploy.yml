@@ -22,10 +22,10 @@ jobs:
             git pull origin main
             
             # Restart services with production config
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
             
             # Run migrations (Optional but recommended)
-            # docker-compose exec -T business-core php artisan migrate --force
+            # docker compose exec -T business-core php artisan migrate --force
             
             # Clean up usage
             docker system prune -f
