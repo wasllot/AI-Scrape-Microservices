@@ -6,3 +6,30 @@ services:
       - "80:80"
       - "443:443"
       - "8080:8080" # Traefik dashboard
+
+  ai-service:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai-service.rule=PathPrefix(`/ai`)"
+      - "traefik.http.routers.ai-service.entrypoints=web"
+      - "traefik.http.services.ai-service.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.ai-strip-prefix.stripprefix.prefixes=/ai"
+      - "traefik.http.routers.ai-service.middlewares=ai-strip-prefix"
+
+  business-core:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.business-core.rule=PathPrefix(`/app`)"
+      - "traefik.http.routers.business-core.entrypoints=web"
+      - "traefik.http.services.business-core.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.business-strip-prefix.stripprefix.prefixes=/app"
+      - "traefik.http.routers.business-core.middlewares=business-strip-prefix"
+
+  scraper-service:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scraper-service.rule=PathPrefix(`/scraper`)"
+      - "traefik.http.routers.scraper-service.entrypoints=web"
+      - "traefik.http.services.scraper-service.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.scraper-strip-prefix.stripprefix.prefixes=/scraper"
+      - "traefik.http.routers.scraper-service.middlewares=scraper-strip-prefix"
