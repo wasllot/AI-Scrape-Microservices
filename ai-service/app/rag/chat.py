@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Protocol
 import uuid
 from datetime import datetime
 import google.generativeai as genai
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from app.config import settings
 from app.rag.embeddings import EmbeddingService
@@ -44,10 +45,6 @@ class GeminiLLMProvider:
         
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name)
-    
-from tenacity import retry, stop_after_attempt, wait_random_exponential
-
-    # ... imports ...
 
     @retry(
         wait=wait_random_exponential(min=1, max=60),

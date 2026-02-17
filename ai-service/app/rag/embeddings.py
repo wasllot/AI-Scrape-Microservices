@@ -11,6 +11,7 @@ from typing import List, Dict, Optional, Protocol
 import google.generativeai as genai
 from app.config import settings
 from app.database import DatabaseConnection, get_db_connection
+from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
 
 
 class EmbeddingProvider(Protocol):
@@ -58,9 +59,6 @@ class GeminiEmbeddingProvider:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
-
-# ... imports ...
 
     @retry(
         wait=wait_random_exponential(min=1, max=60),
