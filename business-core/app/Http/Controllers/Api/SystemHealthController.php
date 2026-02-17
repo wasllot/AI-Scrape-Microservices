@@ -250,9 +250,13 @@ class SystemHealthController extends Controller
     }
 
     /**
-     * Get DigitalOcean Droplet metrics (optional)
+     * Get DigitalOcean Droplet info (optional)
      * 
      * Requires DIGITALOCEAN_TOKEN and DIGITALOCEAN_DROPLET_ID in .env
+     * Returns basic droplet information (specs, region, status)
+     * 
+     * Note: CPU/Memory usage metrics require complex time-series calculations
+     * and are not included in this simplified implementation.
      * 
      * @return array|null
      */
@@ -280,52 +284,23 @@ class SystemHealthController extends Controller
 
             $droplet = $dropletResponse->json('droplet');
 
-            // Get CPU metrics (last 5 minutes)
-            $metricsResponse = Http::withToken($token)
-                ->timeout(5)
-                ->get("https://api.digitalocean.com/v2/monitoring/metrics/droplet/cpu", [
-                    'host_id' => $dropletId,
-                    'start' => now()->subMinutes(5)->timestamp,
-                    'end' => now()->timestamp
-                ]);
-
-            $cpuUsage = null;
-            if ($metricsResponse->ok()) {
-                $metrics = $metricsResponse->json('data.result');
-                $cpuUsage = $this->getLatestMetric($metrics ?? []);
-            }
-
             return [
                 'name' => $droplet['name'] ?? 'Unknown',
                 'status' => $droplet['status'] ?? 'unknown',
                 'region' => $droplet['region']['name'] ?? 'Unknown',
                 'vcpus' => $droplet['vcpus'] ?? null,
-                'memory' => $droplet['memory'] ?? null,
-                'disk' => $droplet['disk'] ?? null,
-                'cpu_usage' => $cpuUsage,
+                'memory_mb' => $droplet['memory'] ?? null,
+                'disk_gb' => $droplet['disk'] ?? null,
+                'ip_address' => $droplet['networks']['v4'][0]['ip_address'] ?? null,
+                'created_at' => $droplet['created_at'] ?? null,
             ];
         } catch (Exception $e) {
             return [
-                'error' => 'Failed to fetch droplet metrics',
+                'error' => 'Failed to fetch droplet info',
                 'message' => $e->getMessage()
             ];
         }
     }
 
-    /**
-     * Extract latest metric value from DigitalOcean response
-     * 
-     * @param array $results
-     * @return float|null
-     */
-    private function getLatestMetric(array $results): ?float
-    {
-        if (empty($results) || empty($results[0]['values'])) {
-            return null;
-        }
 
-        // Get the last value
-        $latest = end($results[0]['values']);
-        return round((float) $latest[1], 2);
-    }
 }
