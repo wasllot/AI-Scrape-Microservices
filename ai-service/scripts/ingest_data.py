@@ -10,25 +10,28 @@ Usage:
     python scripts/ingest_data.py --source https://example.com
     python scripts/ingest_data.py --directory path/to/documents/
 """
-import argparse
-import asyncio
 import os
 import sys
 import json
+import argparse
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Simple config for standalone execution
+class SimpleConfig:
+    def __init__(self):
+        self.gemini_api_key = os.getenv('GEMINI_API_KEY', 'dummy')
+        self.database_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/vector_db')
 
+# Mock settings
+settings = SimpleConfig()
+
+# Now import other dependencies
 from pypdf import PdfReader
 import requests
 from bs4 import BeautifulSoup
-
-from app.config import get_settings
-from app.database import get_db_connection
-from app.rag.embeddings import GeminiEmbeddingProvider
+import google.generativeai as genai
 
 
 class TextExtractor:
