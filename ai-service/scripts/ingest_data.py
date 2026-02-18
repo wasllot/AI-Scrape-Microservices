@@ -27,11 +27,17 @@ class SimpleConfig:
 # Mock settings
 settings = SimpleConfig()
 
-# Now import other dependencies
+# Now import app dependencies
 from pypdf import PdfReader
 import requests
 from bs4 import BeautifulSoup
 import google.generativeai as genai
+
+# Add app to path and import
+sys.path.insert(0, str(Path(__file__).parent.parent / "app"))
+from config import get_settings
+from database import get_db_connection
+from rag.embeddings import GeminiEmbeddingProvider
 
 
 class TextExtractor:
