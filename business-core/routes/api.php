@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+
 Route::get('/health', [HealthController::class, 'index']);
 Route::get('/system-status', [SystemHealthController::class, 'check']);
 Route::post('/chat', [ChatController::class, 'chat']);

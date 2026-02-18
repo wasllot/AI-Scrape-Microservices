@@ -80,6 +80,15 @@ class Settings(BaseSettings):
     privacy_consent_required: bool = Field(default=False, env="PRIVACY_CONSENT_REQUIRED")
     data_deletion_days: int = Field(default=30, env="DATA_DELETION_DAYS")
     
+    # JWT Authentication
+    jwt_secret_key: str = Field(default="your-secret-key-change-in-production", env="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
+    jwt_access_token_expire_minutes: int = Field(default=30, env="JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
+    
+    # Security
+    admin_username: str = Field(default="admin", env="ADMIN_USERNAME")
+    admin_password: str = Field(default="secure_password_change_me", env="ADMIN_PASSWORD")
+    
     @field_validator("gemini_api_key", mode="before")
     @classmethod
     def validate_api_key(cls, v):

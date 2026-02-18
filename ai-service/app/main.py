@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from datetime import timedelta
 import os
 import logging
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,7 @@ except ImportError:
     resourceExhausted = None
 
 from app.config import settings
-from app.security import sanitize_input
+from app.security import sanitize_input, create_access_token, get_current_user, verify_password, get_password_hash
 from app.monitoring import metrics, HealthChecker, get_correlation_id
 from app.data_management import DataValidator, DataHasher
 
@@ -293,6 +295,23 @@ class HealthResponse(BaseModel):
     version: str = Field(..., description="Versión del servicio")
 
 
+class Token(BaseModel):
+    """Response model for JWT token"""
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    """Token data model"""
+    username: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    """Request model for login"""
+    username: str = Field(..., description="Username")
+    password: str = Field(..., description="Password")
+
+
 # ============================================
 # Endpoints
 # ============================================
@@ -372,6 +391,35 @@ async def get_metrics():
     return metrics.get_metrics()
 
 
+@app.post(
+    "/token",
+    response_model=Token,
+    summary="Obtener Token JWT",
+    description="Endpoint para obtener token de acceso JWT",
+    tags=["Authentication"]
+)
+async def login(request: LoginRequest):
+    """
+    Login endpoint to get JWT token.
+    
+    For demo purposes, accepts any username with password "admin".
+    In production, validate against a user database.
+    """
+    if not (secrets.compare_digest(request.username, settings.admin_username) and 
+            secrets.compare_digest(request.password, settings.admin_password)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=settings.jwt_access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": request.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @app.get(
     "/health/ready",
     summary="Readiness Check",
@@ -405,7 +453,8 @@ async def readiness_check():
 )
 async def ingest_data(
     request: IngestRequest,
-    service: EmbeddingService = Depends(get_embedding_service)
+    service: EmbeddingService = Depends(get_embedding_service),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Endpoint para ingerir datos y crear embeddings.
@@ -483,7 +532,8 @@ async def ingest_data(
 )
 async def chat(
     request: ChatRequest,
-    service: RAGChatService = Depends(get_chat_service)
+    service: RAGChatService = Depends(get_chat_service),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Endpoint para consultas RAG.
@@ -543,7 +593,8 @@ class WelcomeResponse(BaseModel):
 )
 async def welcome_message(
     request: WelcomeRequest,
-    service: RAGChatService = Depends(get_chat_service)
+    service: RAGChatService = Depends(get_chat_service),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Endpoint para obtener mensaje de bienvenida.
@@ -565,7 +616,8 @@ async def welcome_message(
 )
 async def delete_embedding(
     embedding_id: int,
-    service: EmbeddingService = Depends(get_embedding_service)
+    service: EmbeddingService = Depends(get_embedding_service),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Delete a specific embedding.
