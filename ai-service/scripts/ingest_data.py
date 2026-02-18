@@ -33,8 +33,16 @@ import requests
 from bs4 import BeautifulSoup
 import google.generativeai as genai
 
-# Add app to path and import
-sys.path.insert(0, str(Path(__file__).parent.parent / "app"))
+# Now import app dependencies - use relative path
+import sys
+script_dir = Path(__file__).parent
+app_dir = script_dir.parent / "app"
+sys.path.insert(0, str(app_dir))
+
+import os
+os.environ.setdefault('APP_ENV', 'production')
+
+# Now import with absolute imports
 from config import get_settings
 from database import get_db_connection
 from rag.embeddings import GeminiEmbeddingProvider
