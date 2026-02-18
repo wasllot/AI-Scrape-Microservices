@@ -6,6 +6,8 @@ from typing import List, Optional
 import os
 import logging
 
+logger = logging.getLogger(__name__)
+
 try:
     from google.api_core.exceptions import ResourceExhausted
 except ImportError:
@@ -15,6 +17,7 @@ except ImportError:
 from app.config import settings
 from app.security import sanitize_input
 from app.monitoring import metrics, HealthChecker, get_correlation_id
+from app.data_management import DataValidator, DataHasher
 
 health_checker = HealthChecker("ai-service")
 
@@ -428,7 +431,26 @@ async def ingest_data(
         HTTPException: Si falla la ingesta
     """
     try:
+        # Input validation and sanitization
         sanitized_content = sanitize_input(request.content, max_length=10000)
+        
+        # Data validation if enabled
+        if settings.data_validation_enabled:
+            validation = DataValidator.validate_content(sanitized_content)
+            if not validation["valid"]:
+                raise HTTPException(status_code=400, detail=validation["error"])
+            
+            # PII sanitization if enabled
+            if settings.pii_sanitization_enabled and validation.get("contains_pii"):
+                sanitized_content = DataValidator.sanitize_pii(sanitized_content)
+                logger.warning(f"PII detected and sanitized in content")
+        
+        # Metadata validation
+        if request.metadata:
+            metadata_validation = DataValidator.validate_metadata(request.metadata)
+            if not metadata_validation["valid"]:
+                raise HTTPException(status_code=400, detail=metadata_validation["error"])
+        
         sanitized_source = sanitize_input(request.source, max_length=100) if request.source else "unknown"
         
         metadata = request.metadata or {}

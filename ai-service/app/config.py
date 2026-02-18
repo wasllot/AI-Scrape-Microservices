@@ -68,6 +68,13 @@ class Settings(BaseSettings):
     rate_limit_requests: int = Field(default=60, env="RATE_LIMIT_REQUESTS")
     rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
     
+    # Data Retention
+    retention_messages_days: int = Field(default=90, env="RETENTION_MESSAGES_DAYS")
+    retention_conversations_days: int = Field(default=365, env="RETENTION_CONVERSATIONS_DAYS")
+    retention_embeddings_days: int = Field(default=365, env="RETENTION_EMBEDDINGS_DAYS")
+    data_validation_enabled: bool = Field(default=True, env="DATA_VALIDATION_ENABLED")
+    pii_sanitization_enabled: bool = Field(default=True, env="PII_SANITIZATION_ENABLED")
+    
     @field_validator("gemini_api_key", mode="before")
     @classmethod
     def validate_api_key(cls, v):
