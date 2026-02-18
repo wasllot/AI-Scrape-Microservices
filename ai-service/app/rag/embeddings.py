@@ -6,6 +6,7 @@ Following SOLID principles:
 - Open/Closed: Open for extension, closed for modification
 - Dependency Inversion: Depend on abstractions, not concretions
 """
+import json
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Protocol
 import google.generativeai as genai
@@ -153,14 +154,15 @@ class PostgreSQLEmbeddingRepository(EmbeddingRepository):
             ID of saved embedding
         """
         embedding_str = '[' + ','.join(map(str, embedding)) + ']'
-        
+        metadata_json = json.dumps(metadata)
+
         result = self.db.execute_one(
             """
             INSERT INTO embeddings (content, embedding, metadata)
             VALUES (%s, %s::vector, %s)
             RETURNING id
             """,
-            (content, embedding_str, metadata)
+            (content, embedding_str, metadata_json)
         )
         
         self.db.commit()
@@ -191,10 +193,10 @@ class PostgreSQLEmbeddingRepository(EmbeddingRepository):
                 id,
                 content,
                 metadata,
-                1 - (embedding <=> %s::vector) as similarity
+                1 - (embedding <=> %s::vector(768)) as similarity
             FROM embeddings
-            WHERE 1 - (embedding <=> %s::vector) > %s
-            ORDER BY embedding <=> %s::vector
+            WHERE 1 - (embedding <=> %s::vector(768)) > %s
+            ORDER BY embedding <=> %s::vector(768)
             LIMIT %s
             """,
             (embedding_str, embedding_str, threshold, embedding_str, limit)

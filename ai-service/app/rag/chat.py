@@ -8,99 +8,21 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Protocol
 import uuid
 import random
+import redis
 from datetime import datetime
-import google.generativeai as genai
-from groq import Groq
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from app.config import settings
 from app.rag.embeddings import EmbeddingService
+from app.rag.router import LLMRouter
+from app.rag.providers.gemini import GeminiLLMProvider
+from app.rag.providers.groq import GroqLLMProvider
+from app.rag.providers.static import StaticFallbackProvider
 
 
-class LLMProvider(Protocol):
-    """
-    Protocol for Language Model providers.
-    
-    Allows swapping between different LLM providers (Gemini, OpenAI, etc.)
-    """
-    
-    def generate_response(self, prompt: str) -> str:
-        """Generate text response from prompt"""
-        ...
-
-
-class GeminiLLMProvider:
-    """
-    Gemini implementation of LLM provider.
-    """
-    
-    def __init__(self, api_key: str = None, model_name: str = None):
-        """
-        Initialize Gemini LLM provider.
-        
-        Args:
-            api_key: Gemini API key
-            model_name: Model to use for generation
-        """
-        self.api_key = api_key or settings.gemini_api_key
-        self.model_name = model_name or settings.chat_model
-        
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(self.model_name)
-
-    @retry(
-        wait=wait_random_exponential(min=1, max=60),
-        stop=stop_after_attempt(6),
-        reraise=True
-    )
-    def generate_response(self, prompt: str) -> str:
-        """
-        Generate response using Gemini.
-        
-        Args:
-            prompt: Input prompt
-            
-        Returns:
-            Generated text
-        """
-        try:
-            response = self.model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            # Check if block reason exists (safety filters)
-            if hasattr(e, 'response') and hasattr(e.response, 'prompt_feedback'):
-                print(f"Gemini Refusal: {e.response.prompt_feedback}")
-            raise e
-
-
-class GroqLLMProvider:
-    """
-    Groq implementation of LLM provider (Fallback).
-    """
-    
-    def __init__(self, api_key: str = None, model_name: str = None):
-        self.api_key = api_key or settings.groq_api_key
-        self.model = model_name or settings.groq_model
-        self.client = Groq(api_key=self.api_key)
-
-    def generate_response(self, prompt: str) -> str:
-        """
-        Generate response using Groq (Llama 3).
-        """
-        try:
-            chat_completion = self.client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                model=self.model,
-            )
-            return chat_completion.choices[0].message.content
-        except Exception as e:
-            print(f"Groq Error: {str(e)}")
-            raise e
+# Provider classes moved to app/rag/providers/
+# - GeminiLLMProvider -> providers/gemini.py
+# - GroqLLMProvider -> providers/groq.py
+# - StaticFallbackProvider -> providers/static.py
 
 
 class ConversationStore(ABC):
@@ -348,24 +270,52 @@ Si el contexto está vacío y te saludan, preséntate brevemente como el asisten
         
         return "\n---\n".join(context_parts)
     
-    def build_history(self, history: List[Dict]) -> str:
+    def _estimate_tokens(self, text: str) -> int:
         """
-        Build history string from conversation turns.
+        Rough token estimation (4 chars ≈ 1 token).
+        
+        Args:
+            text: Text to estimate
+            
+        Returns:
+            Estimated token count
+        """
+        return len(text) // 4
+    
+    def build_history(self, history: List[Dict], max_tokens: int = 2048) -> str:
+        """
+        Build history string with sliding window.
+        
+        Only includes recent messages that fit within token limit.
+        This prevents context overflow errors.
         
         Args:
             history: List of conversation turns
+            max_tokens: Maximum tokens for history
             
         Returns:
-            Formatted history string
+            Formatted history string (newest messages first)
         """
         if not history:
             return ""
         
         history_text = "\n\nHistorial de conversación:\n"
-        for turn in history[-3:]:  # Last 3 turns only
-            history_text += f"Usuario: {turn['question']}\nAsistente: {turn['answer']}\n\n"
+        header_tokens = self._estimate_tokens(history_text)
+        remaining_tokens = max_tokens - header_tokens
         
-        return history_text
+        # Build from newest to oldest
+        included_turns = []
+        for turn in reversed(history):
+            turn_text = f"Usuario: {turn['question']}\nAsistente: {turn['answer']}\n\n"
+            turn_tokens = self._estimate_tokens(turn_text)
+            
+            if turn_tokens > remaining_tokens:
+                break  # Stop if this turn doesn't fit
+            
+            included_turns.insert(0, turn_text)  # Add to front
+            remaining_tokens -= turn_tokens
+        
+        return history_text + "".join(included_turns)
     
     def build_prompt(
         self, 
@@ -408,30 +358,48 @@ class RAGChatService:
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        llm_provider: LLMProvider = None,
+        llm_router: Optional[LLMRouter] = None,
         conversation_store: ConversationStore = None,
-        prompt_builder: PromptBuilder = None
+        prompt_builder: PromptBuilder = None,
+        redis_client: Optional[redis.Redis] = None
     ):
         """
         Initialize RAG chat service with dependencies.
         
         Args:
             embedding_service: Service for embedding operations
-            llm_provider: LLM provider for generation
+            llm_router: Router for resilient LLM orchestration
             conversation_store: Storage for conversations
             prompt_builder: Builder for prompts
+            redis_client: Redis client for circuit breaker
         """
         self.embedding_service = embedding_service
         self.conversation_store = conversation_store or PostgresConversationStore()
         self.prompt_builder = prompt_builder or PromptBuilder()
         
-        # Initialize Primary Provider (Gemini)
-        self.primary_llm = llm_provider or GeminiLLMProvider()
+        # Initialize Redis client for circuit breaker
+        if redis_client is None:
+            try:
+                redis_client = redis.Redis(
+                    host=settings.redis_host,
+                    port=settings.redis_port,
+                    password=settings.redis_password,
+                    decode_responses=True
+                )
+            except Exception:
+                redis_client = None  # Circuit breaker disabled if Redis unavailable
         
-        # Initialize Secondary Provider (Groq) if key is available
-        self.secondary_llm = None
-        if settings.groq_api_key:
-            self.secondary_llm = GroqLLMProvider()
+        # Initialize LLM Router with multi-layer fallback
+        if llm_router is None:
+            primary = GeminiLLMProvider()
+            secondary = GroqLLMProvider() if settings.groq_api_key else None
+            self.llm_router = LLMRouter(
+                primary=primary,
+                secondary=secondary,
+                redis_client=redis_client
+            )
+        else:
+            self.llm_router = llm_router
     
     async def generate_response(
         self,
@@ -473,16 +441,19 @@ class RAGChatService:
             history=history_text
         )
         
-        # Step 4: Generate response with Fallback
-        try:
-            answer = self.primary_llm.generate_response(prompt)
-        except Exception as e:
-            if self.secondary_llm:
-                print(f"⚠️ Primary LLM failed ({str(e)}). Switching to Groq/Llama3 backup.")
-                answer = self.secondary_llm.generate_response(prompt)
-                answer += "\n\n_(Respuesta generada por el sistema de respaldo)_" 
-            else:
-                raise e
+        # Step 4: Generate response with Router (handles all fallback logic)
+        router_response = await self.llm_router.generate(
+            prompt=prompt,
+            conversation_id=conversation_id
+        )
+        
+        answer = router_response["text"]
+        provider_used = router_response["provider"]
+        fallback_used = router_response["fallback_used"]
+        
+        # Add fallback notice if secondary provider was used
+        if fallback_used and provider_used != "static_fallback":
+            answer += "\n\n_(Respuesta generada por sistema de respaldo)_"
         
         # Step 5: Save conversation turn
         self.conversation_store.save_turn(
