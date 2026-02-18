@@ -137,7 +137,7 @@ class PostgresConversationStore(ConversationStore):
             question: User question
             answer: Assistant answer
         """
-        # Ensure conversation exists
+        # Ensure conversation exists and insert messages in single transaction
         self.db.execute(
             """
             INSERT INTO conversations (id, created_at, updated_at)
@@ -148,23 +148,15 @@ class PostgresConversationStore(ConversationStore):
             fetch_results=False
         )
         
-        # Insert user message
+        # Batch insert both messages
         self.db.execute(
             """
             INSERT INTO messages (conversation_id, role, content, created_at)
-            VALUES (%s, 'user', %s, CURRENT_TIMESTAMP)
+            VALUES 
+                (%s, 'user', %s, CURRENT_TIMESTAMP),
+                (%s, 'assistant', %s, CURRENT_TIMESTAMP)
             """,
-            (conversation_id, question),
-            fetch_results=False
-        )
-        
-        # Insert assistant message
-        self.db.execute(
-            """
-            INSERT INTO messages (conversation_id, role, content, created_at)
-            VALUES (%s, 'assistant', %s, CURRENT_TIMESTAMP)
-            """,
-            (conversation_id, answer),
+            (conversation_id, question, conversation_id, answer),
             fetch_results=False
         )
         
@@ -185,15 +177,16 @@ class PostgresConversationStore(ConversationStore):
         Returns:
             List of conversation turns
         """
-        # Get messages ordered by creation time
+        # Get messages with limit at database level
         messages = self.db.execute(
             """
             SELECT role, content, created_at
             FROM messages
             WHERE conversation_id = %s
             ORDER BY created_at ASC
+            LIMIT %s
             """,
-            (conversation_id,)
+            (conversation_id, limit * 2)
         )
         
         # Group messages into turns (user + assistant pairs)

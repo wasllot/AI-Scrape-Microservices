@@ -3,12 +3,14 @@ Scraper Interfaces and Implementations
 
 Following SOLID principles with Protocol pattern and dependency injection.
 """
+import json
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Protocol
 from dataclasses import dataclass
-from playwright.async_api import async_playwright, Browser, Page
+from playwright.async_api import async_playwright, Browser, Page, BrowserContext
 from bs4 import BeautifulSoup
 import asyncio
+import hashlib
 
 from app.config import settings
 
@@ -112,13 +114,15 @@ class PlaywrightBrowserProvider:
     Playwright implementation of BrowserProvider.
     
     Handles JavaScript rendering and dynamic content.
+    Uses browser context pooling for better resource management.
     """
     
     def __init__(
         self,
         headless: bool = None,
         timeout: int = None,
-        user_agent: str = None
+        user_agent: str = None,
+        max_contexts: int = 5
     ):
         """
         Initialize Playwright browser.
@@ -127,22 +131,51 @@ class PlaywrightBrowserProvider:
             headless: Run in headless mode
             timeout: Page load timeout in milliseconds
             user_agent: Custom user agent
+            max_contexts: Maximum browser contexts to pool
         """
         self.headless = headless if headless is not None else settings.headless
         self.timeout = timeout or settings.timeout
         self.user_agent = user_agent or settings.user_agent
+        self.max_contexts = max_contexts
         
         self._playwright = None
         self._browser: Optional[Browser] = None
-        self._page: Optional[Page] = None
+        self._contexts: List[BrowserContext] = []
+        self._available_contexts: asyncio.Queue = None
     
     async def _ensure_browser(self):
-        """Lazy browser initialization"""
+        """Lazy browser initialization with context pool"""
         if self._browser is None:
             self._playwright = await async_playwright().start()
             self._browser = await self._playwright.chromium.launch(
                 headless=self.headless
             )
+            self._available_contexts = asyncio.Queue()
+            for _ in range(self.max_contexts):
+                context = await self._browser.new_context(
+                    user_agent=self.user_agent
+                )
+                self._contexts.append(context)
+                await self._available_contexts.put(context)
+    
+    async def _get_context(self) -> BrowserContext:
+        """Get a browser context from the pool"""
+        await self._ensure_browser()
+        try:
+            return await asyncio.wait_for(
+                self._available_contexts.get(),
+                timeout=30
+            )
+        except asyncio.TimeoutError:
+            context = await self._browser.new_context(user_agent=self.user_agent)
+            return context
+    
+    async def _return_context(self, context: BrowserContext):
+        """Return a browser context to the pool"""
+        try:
+            await self._available_contexts.put_nowait(context)
+        except asyncio.QueueFull:
+            await context.close()
     
     async def fetch_page(self, url: str) -> str:
         """
@@ -157,28 +190,36 @@ class PlaywrightBrowserProvider:
         Raises:
             Exception: If page fetch fails
         """
-        await self._ensure_browser()
-        
+        context = None
+        page = None
         try:
-            self._page = await self._browser.new_page(
-                user_agent=self.user_agent
-            )
+            context = await self._get_context()
+            page = await context.new_page()
             
-            await self._page.goto(url, timeout=self.timeout)
-            await self._page.wait_for_load_state("networkidle")
+            await page.goto(url, timeout=self.timeout)
+            await page.wait_for_load_state("networkidle")
             
-            html = await self._page.content()
-            await self._page.close()
-            
+            html = await page.content()
             return html
         
         except Exception as e:
-            if self._page:
-                await self._page.close()
             raise Exception(f"Failed to fetch page: {str(e)}")
+        
+        finally:
+            if page:
+                await page.close()
+            if context:
+                await self._return_context(context)
     
     async def close(self) -> None:
-        """Close browser and cleanup"""
+        """Close browser and all contexts"""
+        for context in self._contexts:
+            try:
+                await context.close()
+            except Exception:
+                pass
+        self._contexts.clear()
+        
         if self._browser:
             await self._browser.close()
         if self._playwright:
@@ -265,6 +306,47 @@ class InMemoryCache:
         self._cache[key] = (value, expiry)
 
 
+class RedisCache:
+    """
+    Redis-based cache implementation for production.
+    
+    Supports multi-instance deployments and better TTL management.
+    """
+    
+    def __init__(self, redis_url: str = None):
+        self._redis_url = redis_url or f"redis://:{settings.redis_password}@{settings.redis_host}:{settings.redis_port}/0" if settings.redis_password else f"redis://{settings.redis_host}:{settings.redis_port}/0"
+        self._client = None
+    
+    async def _ensure_client(self):
+        """Lazy Redis connection initialization"""
+        if self._client is None:
+            import redis.asyncio as redis
+            self._client = redis.from_url(self._redis_url, decode_responses=True)
+    
+    async def get(self, key: str) -> Optional[str]:
+        """Get cached value"""
+        await self._ensure_client()
+        try:
+            return await self._client.get(key)
+        except Exception:
+            return None
+    
+    async def set(self, key: str, value: str, ttl: int) -> None:
+        """Set value with TTL"""
+        await self._ensure_client()
+        try:
+            await self._client.setex(key, ttl, value)
+        except Exception:
+            pass
+
+
+def get_cache_provider() -> CacheProvider:
+    """Factory function to get appropriate cache provider"""
+    if settings.cache_enabled and settings.redis_host:
+        return RedisCache()
+    return InMemoryCache()
+
+
 # ============================================
 # Scraper Service
 # ============================================
@@ -312,14 +394,19 @@ class ScraperService:
             ScrapedData object with results
         """
         try:
-            # Check cache
+            # Check cache with better key (include rules hash)
             if use_cache and settings.cache_enabled:
-                cache_key = f"scrape:{url}"
+                rules_hash = hashlib.md5(
+                    json.dumps({k: vars(v) for k, v in extraction_rules.items()}, sort_keys=True).encode()
+                ).hexdigest()[:8]
+                cache_key = f"scrape:{url}:{rules_hash}"
                 cached = await self.cache.get(cache_key)
                 if cached:
+                    cached_data = json.loads(cached)
                     return ScrapedData(
                         url=url,
-                        data={"cached": True},
+                        title=cached_data.get("title"),
+                        data=cached_data.get("data"),
                         metadata={"from_cache": True},
                         success=True
                     )
@@ -341,7 +428,8 @@ class ScraperService:
             
             # Cache result
             if use_cache and settings.cache_enabled:
-                await self.cache.set(cache_key, str(extracted_data), settings.cache_ttl)
+                cache_data = json.dumps({"title": title, "data": extracted_data})
+                await self.cache.set(cache_key, cache_data, settings.cache_ttl)
             
             return ScrapedData(
                 url=url,
