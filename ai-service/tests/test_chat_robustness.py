@@ -57,3 +57,28 @@ async def test_fallback_to_groq_on_error():
     assert "(Respuesta generada por el sistema de respaldo)" in response["answer"]
     mock_gemini.generate_response.assert_called_once()
     mock_groq.generate_response.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_error_handling_without_fallback():
+    """Test that exception is raised if Gemini fails and no fallback is configured"""
+    # Setup
+    mock_gemini = MagicMock(spec=GeminiLLMProvider)
+    mock_gemini.generate_response.side_effect = Exception("General Error")
+    
+    service = RAGChatService(
+        embedding_service=AsyncMock(),
+        llm_provider=mock_gemini,
+        conversation_store=MagicMock(),
+        prompt_builder=MagicMock()
+    )
+    # Ensure no secondary provider
+    service.secondary_llm = None
+    
+    # Mock embedding search
+    service.embedding_service.search_similar.return_value = []
+    
+    # Act & Assert
+    with pytest.raises(Exception) as excinfo:
+        await service.generate_response("Test Question")
+    
+    assert "General Error" in str(excinfo.value)

@@ -1,0 +1,152 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-7.4.3, pluggy-1.6.0 -- /usr/local/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /app
+configfile: pytest.ini
+plugins: asyncio-0.21.1, mock-3.12.0, anyio-4.12.1, cov-4.1.0
+asyncio: mode=Mode.AUTO
+collecting ... collected 10 items
+
+tests/test_embeddings.py::TestGeminiEmbeddingProvider::test_generate_embedding_success PASSED [ 10%]
+tests/test_embeddings.py::TestGeminiEmbeddingProvider::test_generate_embedding_failure PASSED [ 20%]
+tests/test_embeddings.py::TestGeminiEmbeddingProvider::test_dimension_property PASSED [ 30%]
+tests/test_embeddings.py::TestPostgreSQLEmbeddingRepository::test_save_embedding PASSED [ 40%]
+tests/test_embeddings.py::TestPostgreSQLEmbeddingRepository::test_find_similar PASSED [ 50%]
+tests/test_embeddings.py::TestPostgreSQLEmbeddingRepository::test_delete_embedding PASSED [ 60%]
+tests/test_embeddings.py::TestEmbeddingService::test_ingest_success PASSED [ 70%]
+tests/test_embeddings.py::TestEmbeddingService::test_search_similar FAILED [ 80%]
+tests/test_embeddings.py::TestEmbeddingService::test_delete_embedding PASSED [ 90%]
+tests/test_embeddings.py::TestEmbeddingIntegration::test_full_workflow SKIPPED [100%]
+
+=================================== FAILURES ===================================
+___________________ TestEmbeddingService.test_search_similar ___________________
+
+self = <Mock name='mock.generate_embedding' id='124613734692432'>
+args = ('test query',), kwargs = {}, expected = call('test query')
+actual = call('test query', task_type='retrieval_query')
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x7155e3c56f20>
+cause = None
+
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+    
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+    
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: generate_embedding('test query')
+E             Actual: generate_embedding('test query', task_type='retrieval_query')
+
+/usr/local/lib/python3.11/unittest/mock.py:939: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <Mock name='mock.generate_embedding' id='124613734692432'>
+args = ('test query',), kwargs = {}
+
+    def assert_called_once_with(self, /, *args, **kwargs):
+        """assert that the mock was called exactly once and that that call was
+        with the specified arguments."""
+        if not self.call_count == 1:
+            msg = ("Expected '%s' to be called once. Called %s times.%s"
+                   % (self._mock_name or 'mock',
+                      self.call_count,
+                      self._calls_repr()))
+            raise AssertionError(msg)
+>       return self.assert_called_with(*args, **kwargs)
+E       AssertionError: expected call not found.
+E       Expected: generate_embedding('test query')
+E         Actual: generate_embedding('test query', task_type='retrieval_query')
+E       
+E       pytest introspection follows:
+E       
+E       Kwargs:
+E       assert {'task_type':...rieval_query'} == {}
+E         Left contains 1 more item:
+E         {'task_type': 'retrieval_query'}
+E         Full diff:
+E         - {}
+E         + {'task_type': 'retrieval_query'}
+
+/usr/local/lib/python3.11/unittest/mock.py:951: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.test_embeddings.TestEmbeddingService object at 0x7155e3cc3f90>
+embedding_service = <app.rag.embeddings.EmbeddingService object at 0x7155e3cf8b10>
+mock_embedding_provider = <Mock spec='EmbeddingProvider' id='124613706260752'>
+mock_embedding_repository = <Mock spec='EmbeddingRepository' id='124613763134416'>
+
+    @pytest.mark.asyncio
+    async def test_search_similar(self, embedding_service, mock_embedding_provider, mock_embedding_repository):
+        """Test similarity search"""
+        # Arrange
+        query = "test query"
+    
+        # Act
+        results = await embedding_service.search_similar(query, limit=5)
+    
+        # Assert
+        assert len(results) == 1
+        assert results[0]["similarity"] == 0.95
+>       mock_embedding_provider.generate_embedding.assert_called_once_with(query)
+E       AssertionError: expected call not found.
+E       Expected: generate_embedding('test query')
+E         Actual: generate_embedding('test query', task_type='retrieval_query')
+E       
+E       pytest introspection follows:
+E       
+E       Kwargs:
+E       assert {'task_type':...rieval_query'} == {}
+E         Left contains 1 more item:
+E         {'task_type': 'retrieval_query'}
+E         Full diff:
+E         - {}
+E         + {'task_type': 'retrieval_query'}
+
+tests/test_embeddings.py:200: AssertionError
+=============================== warnings summary ===============================
+../usr/local/lib/python3.11/site-packages/pydantic/fields.py:799: 16 warnings
+  /usr/local/lib/python3.11/site-packages/pydantic/fields.py:799: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'env'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warn(
+
+app/config.py:45
+  /app/app/config.py:45: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    @validator("gemini_api_key")
+
+../usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:271
+  /usr/local/lib/python3.11/site-packages/pydantic/_internal/_config.py:271: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.5/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform linux, python 3.11.14-final-0 ----------
+Name                    Stmts   Miss  Cover   Missing
+-----------------------------------------------------
+app/config.py              33      2    94%   49, 55
+app/database.py            65     42    35%   54-56, 60-69, 83-87, 100-103, 107-108, 112-117, 121-122, 126-128, 138, 147-149, 159-166, 170-171
+app/main.py               146    146     0%   1-528
+app/rag/__init__.py         0      0   100%
+app/rag/chat.py           136    136     0%   7-545
+app/rag/embeddings.py      62      0   100%
+-----------------------------------------------------
+TOTAL                     442    326    26%
+Coverage HTML written to dir htmlcov
+
+=========================== short test summary info ============================
+FAILED tests/test_embeddings.py::TestEmbeddingService::test_search_similar - ...
+============= 1 failed, 8 passed, 1 skipped, 18 warnings in 24.69s =============

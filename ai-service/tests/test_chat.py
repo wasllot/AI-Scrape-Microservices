@@ -4,7 +4,7 @@ Tests for RAG Chat Service and Conversation Persistence
 Tests the conversation storage implementations and RAG chat functionality.
 """
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock, patch, AsyncMock
 from datetime import datetime
 import uuid
 
@@ -237,7 +237,7 @@ async def test_rag_chat_service_generate_response():
     """Test RAG chat service response generation"""
     # Arrange
     mock_embedding_service = Mock()
-    mock_embedding_service.search_similar = Mock(return_value=[
+    mock_embedding_service.search_similar = AsyncMock(return_value=[
         {
             'id': 1,
             'content': 'RAG is a technique',
@@ -273,7 +273,7 @@ async def test_rag_chat_service_with_conversation_id():
     """Test RAG chat service with existing conversation"""
     # Arrange
     mock_embedding_service = Mock()
-    mock_embedding_service.search_similar = Mock(return_value=[])
+    mock_embedding_service.search_similar = AsyncMock(return_value=[])
     
     mock_llm = Mock()
     mock_llm.generate_response = Mock(return_value="Follow-up answer")
