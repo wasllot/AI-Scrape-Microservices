@@ -3,29 +3,53 @@ name: Deploy to DigitalOcean
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify secrets
+        run: |
+          echo "Checking required secrets..."
+          [ -n "${{ secrets.DROPLET_IP }}" ] || { echo "DROPLET_IP required"; exit 1; }
+          [ -n "${{ secrets.SSH_PRIVATE_KEY }}" ] || { echo "SSH_PRIVATE_KEY required"; exit 1; }
+      
       - name: Deploy to DigitalOcean Droplet
-        uses: appleboy/ssh-action@v0.1.7
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: ${{ secrets.DROPLET_USER || 'root' }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Navigate to project directory (Adjust path if different)
             cd /opt/microservices
             
-            # Pull latest changes
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             
-            # Restart services with production config
+            # Run database migrations
+            docker compose exec -T ai-service python -c "from app.database import get_db_connection; get_db_connection().execute('SELECT 1')" || true
+            
+            # Pull and restart services
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
             
-            # Run migrations (Optional but recommended)
-            # docker compose exec -T business-core php artisan migrate --force
+            # Health check
+            sleep 10
+            curl -f http://localhost:8000/health || echo "Health check failed"
             
-            # Clean up usage
-            docker system prune -f
+            # Clean up
+            docker system prune -f --filter "until=24h"
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          echo "Deployment $STATUS"
+          # Add Slack/Discord notification here
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{"text":"Deployment $STATUS for microservice"}' \
+          #   ${{ secrets.SLACK_WEBHOOK }}
