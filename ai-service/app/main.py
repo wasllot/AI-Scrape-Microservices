@@ -14,6 +14,9 @@ except ImportError:
 
 from app.config import settings
 from app.security import sanitize_input
+from app.monitoring import metrics, HealthChecker, get_correlation_id
+
+health_checker = HealthChecker("ai-service")
 
 # ... imports ...
 
@@ -330,20 +333,63 @@ async def health_check():
     Returns:
         Estado del servicio y sus dependencias
     """
+    db_healthy = False
     try:
-        db_status = "connected" if test_connection() else "error"
-    except Exception as e:
-        db_status = f"error: {str(e)}"
+        db_healthy = test_connection()
+    except Exception:
+        pass
     
     gemini_status = "configured" if settings.gemini_api_key else "missing_key"
     
+    overall_status = "healthy"
+    if not db_healthy:
+        overall_status = "unhealthy"
+    
     return {
-        "status": "ok",
+        "status": overall_status,
         "service": "ai-service",
-        "database": db_status,
+        "database": "connected" if db_healthy else "error",
         "gemini_api": gemini_status,
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "dependencies": {
+            "database": {"status": "healthy" if db_healthy else "unhealthy"},
+            "gemini": {"status": "healthy" if gemini_status == "configured" else "unhealthy"}
+        }
     }
+
+
+@app.get(
+    "/metrics",
+    summary="Service Metrics",
+    description="Returns service metrics including request counts, timings, and errors",
+    tags=["Monitoring"]
+)
+async def get_metrics():
+    """Get service metrics"""
+    return metrics.get_metrics()
+
+
+@app.get(
+    "/health/ready",
+    summary="Readiness Check",
+    description="Kubernetes-style readiness probe",
+    tags=["Monitoring"]
+)
+async def readiness_check():
+    """ readiness probe for Kubernetes"""
+    db_ready = False
+    try:
+        db_ready = test_connection()
+    except Exception:
+        pass
+    
+    if not db_ready:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "reason": "database unavailable"}
+        )
+    
+    return {"status": "ready"}
 
 
 @app.post(

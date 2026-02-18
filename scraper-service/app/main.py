@@ -11,6 +11,7 @@ import asyncio
 
 from app.config import settings
 from app.security import sanitize_css_selector, sanitize_url
+from app.monitoring import metrics
 from app.scrapers.base import (
     ScraperService,
     JobPostingScraper,
@@ -213,8 +214,34 @@ async def health_check():
         "service": "scraper-service",
         "playwright": "ready",
         "cache": "enabled" if settings.cache_enabled else "disabled",
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "dependencies": {
+            "cache": {"status": "healthy" if settings.cache_enabled else "disabled"},
+            "playwright": {"status": "healthy"}
+        }
     }
+
+
+@app.get(
+    "/metrics",
+    summary="Service Metrics",
+    description="Returns service metrics including request counts, timings, and errors",
+    tags=["Monitoring"]
+)
+async def get_metrics():
+    """Get service metrics"""
+    return metrics.get_metrics()
+
+
+@app.get(
+    "/health/ready",
+    summary="Readiness Check",
+    description="Kubernetes-style readiness probe",
+    tags=["Monitoring"]
+)
+async def readiness_check():
+    """Readiness probe for Kubernetes"""
+    return {"status": "ready"}
 
 
 @app.post(
