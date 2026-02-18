@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Protocol
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from app.config import settings
+from config import settings
 
 
 class DatabaseConnection(Protocol):
