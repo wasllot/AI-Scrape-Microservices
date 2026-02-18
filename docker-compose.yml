@@ -118,6 +118,14 @@ services:
       - AI_SERVICE_URL=http://ai-service:8000
       - SCRAPER_SERVICE_URL=http://scraper-service:8000
       - JWT_SECRET=${JWT_SECRET_KEY}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     ports:
       - "9000:80"
     volumes:
