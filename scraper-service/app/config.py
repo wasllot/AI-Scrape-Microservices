@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Application Configuration
     app_name: str = Field(default="Universal Scraper Service", env="APP_NAME")
     debug: bool = Field(default=False, env="DEBUG")
+    allowed_origins: str = Field(default="http://localhost:3000", env="ALLOWED_ORIGINS")
     
     # Playwright Configuration
     headless: bool = Field(default=True, env="PLAYWRIGHT_HEADLESS")

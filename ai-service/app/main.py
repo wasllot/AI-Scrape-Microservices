@@ -13,6 +13,7 @@ except ImportError:
     resourceExhausted = None
 
 from app.config import settings
+from app.security import sanitize_input
 
 # ... imports ...
 
@@ -83,7 +84,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -368,13 +369,14 @@ async def ingest_data(
         HTTPException: Si falla la ingesta
     """
     try:
-        # Merge metadata
-        metadata = request.metadata or {}
-        metadata['source'] = request.source
+        sanitized_content = sanitize_input(request.content, max_length=10000)
+        sanitized_source = sanitize_input(request.source, max_length=100) if request.source else "unknown"
         
-        # Generate and store embedding
+        metadata = request.metadata or {}
+        metadata['source'] = sanitized_source
+        
         embedding_id = await service.ingest(
-            content=request.content,
+            content=sanitized_content,
             metadata=metadata
         )
         
@@ -426,9 +428,12 @@ async def chat(
     Raises:
         HTTPException: Si falla la generación
     """
+    sanitized_question = sanitize_input(request.question, max_length=1000)
+    sanitized_conversation_id = sanitize_input(request.conversation_id, max_length=100) if request.conversation_id else None
+    
     response = await service.generate_response(
-        question=request.question,
-        conversation_id=request.conversation_id,
+        question=sanitized_question,
+        conversation_id=sanitized_conversation_id,
         max_context_items=request.max_context_items
     )
     

@@ -10,6 +10,7 @@ from typing import Dict, Optional, List
 import asyncio
 
 from app.config import settings
+from app.security import sanitize_css_selector, sanitize_url
 from app.scrapers.base import (
     ScraperService,
     JobPostingScraper,
@@ -49,7 +50,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -253,19 +254,19 @@ async def extract_data(
         HTTPException: Si falla el scraping
     """
     try:
-        # Convert Pydantic models to ExtractionRule
+        sanitized_url = sanitize_url(str(request.url))
+        
         rules = {
             field_name: ExtractionRule(
-                selector=rule.selector,
+                selector=sanitize_css_selector(rule.selector),
                 attribute=rule.attribute,
                 multiple=rule.multiple
             )
             for field_name, rule in request.extraction_rules.items()
         }
         
-        # Scrape
         result: ScrapedData = await scraper.scrape(
-            url=str(request.url),
+            url=sanitized_url,
             extraction_rules=rules,
             use_cache=request.use_cache
         )
@@ -279,6 +280,11 @@ async def extract_data(
             error=result.error
         )
     
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid input: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -319,7 +325,8 @@ async def scrape_job_posting(
         HTTPException: Si falla el scraping
     """
     try:
-        result: ScrapedData = await job_scraper.scrape_job(str(request.url))
+        sanitized_url = sanitize_url(str(request.url))
+        result: ScrapedData = await job_scraper.scrape_job(sanitized_url)
         
         return ScrapeResponse(
             success=result.success,
@@ -330,6 +337,11 @@ async def scrape_job_posting(
             error=result.error
         )
     
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid input: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,

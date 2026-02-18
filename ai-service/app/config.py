@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     # Application Configuration
     app_name: str = Field(default="AI & RAG Engine", env="APP_NAME")
     debug: bool = Field(default=False, env="DEBUG")
+    allowed_origins: str = Field(default="http://localhost:3000", env="ALLOWED_ORIGINS")
     
     @validator("gemini_api_key")
     def validate_api_key(cls, v):
