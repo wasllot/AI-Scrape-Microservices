@@ -18,38 +18,26 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-# Simple config for standalone execution
-class SimpleConfig:
-    def __init__(self):
-        self.gemini_api_key = os.getenv('GEMINI_API_KEY', 'dummy')
-        self.database_url = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/vector_db')
+# ── MUST be done BEFORE any app/third-party imports ──────────────────────────
+# The script lives at /app/scripts/ingest_data.py.
+# App modules (config, database, rag, ...) live at /app/app/*.
+# We need BOTH /app and /app/app on sys.path.
+_script_dir = Path(__file__).resolve().parent   # /app/scripts
+_root_dir   = _script_dir.parent                # /app
+_app_dir    = _root_dir / "app"                 # /app/app
+sys.path.insert(0, str(_app_dir))
+sys.path.insert(0, str(_root_dir))
+os.environ.setdefault('ENV', 'development')
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Mock settings
-settings = SimpleConfig()
 
-# Now import app dependencies
+# Third-party imports
 from pypdf import PdfReader
 import requests
 from bs4 import BeautifulSoup
 import google.generativeai as genai
 
-# Now import app dependencies - set PYTHONPATH to parent dir
-import os
-import sys
-from pathlib import Path
-
-script_dir = Path(__file__).parent
-app_dir = script_dir.parent / "app"
-root_dir = script_dir.parent
-
-# Set PYTHONPATH so 'from app.X' imports work
-os.environ['PYTHONPATH'] = str(root_dir)
-sys.path.insert(0, str(root_dir))
-
-# Set default env
-os.environ.setdefault('ENV', 'development')
-
-# Now import app modules
+# App imports (work now because sys.path was set above)
 from config import get_settings
 from database import get_db_connection
 from rag.embeddings import GeminiEmbeddingProvider
