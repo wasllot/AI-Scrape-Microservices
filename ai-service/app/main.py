@@ -25,18 +25,31 @@ app = FastAPI(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     error_msg = str(exc)
+    request_info = {
+        "method": request.method,
+        "url": str(request.url),
+        "client_host": request.client.host if request.client else None,
+        "headers": {k: v for k, v in request.headers.items() if k.lower() not in ['authorization', 'cookie']}
+    }
     
     # Check for ResourceExhausted or 429 in message
     if (ResourceExhausted and isinstance(exc, ResourceExhausted)) or "429" in error_msg or "Resource has been exhausted" in error_msg:
-        logging.warning(f"Rate limit hit: {error_msg}")
+        logging.warning(f"Rate limit exceeded | Request: {request_info} | Error: {error_msg}")
         return JSONResponse(
-            status_code=200, # Return 200 so frontend displays it as a message
+            status_code=429,
             content={
-                "answer": "⚠️ **Aviso del Asistente:** Lamentablemente, he alcanzado temporalmente mi límite de capacidad cognitiva (API Rate Limit). Por favor, espera unos segundos y vuelve a preguntarme. ¡No te vayas, estoy ansioso por ayudarte! 🤖",
-                "sources": [],
-                "conversation_id": "rate_limited" 
+                "detail": "Rate limit exceeded. Please wait before making more requests.",
+                "error_type": "rate_limit",
+                "retry_after": 60
             }
         )
+    
+    # Default behavior for other exceptions
+    logging.error(f"Unhandled exception | Request: {request_info} | Error: {error_msg}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error_type": "internal_error"}
+    )
     
     # Default behavior for other exceptions
     logging.error(f"Global error: {error_msg}")
