@@ -171,6 +171,8 @@ async def startup_event():
     print("\n" + "="*50)
     print("🚀 AI Service Starting Up")
     print("="*50)
+    print(f"📊 Database: {settings.postgres_host}:{settings.postgres_port}")
+    print(f"🤖 Model: {settings.chat_model}")
     
     # Test database connection
     if not test_connection():
@@ -646,13 +648,6 @@ async def delete_embedding(
 # Startup/Shutdown Events
 # ============================================
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize services on startup"""
-    print(f"🚀 Starting {settings.app_name}")
-    print(f"📊 Database: {settings.postgres_host}:{settings.postgres_port}")
-    print(f"🤖 Model: {settings.chat_model}")
-    print(f"📐 Embedding dimension: {settings.embedding_dimension}")
 
 
 @app.on_event("shutdown")
