@@ -75,6 +75,11 @@ class Settings(BaseSettings):
     data_validation_enabled: bool = Field(default=True, env="DATA_VALIDATION_ENABLED")
     pii_sanitization_enabled: bool = Field(default=True, env="PII_SANITIZATION_ENABLED")
     
+    # Privacy & Compliance
+    audit_logging_enabled: bool = Field(default=True, env="AUDIT_LOGGING_ENABLED")
+    privacy_consent_required: bool = Field(default=False, env="PRIVACY_CONSENT_REQUIRED")
+    data_deletion_days: int = Field(default=30, env="DATA_DELETION_DAYS")
+    
     @field_validator("gemini_api_key", mode="before")
     @classmethod
     def validate_api_key(cls, v):
