@@ -14,15 +14,13 @@ from datetime import datetime
 from app.config import settings
 from app.rag.embeddings import EmbeddingService
 from app.rag.router import LLMRouter
-from app.rag.providers.gemini import GeminiLLMProvider
-from app.rag.providers.groq import GroqLLMProvider
-from app.rag.providers.static import StaticFallbackProvider
-
-
-# Provider classes moved to app/rag/providers/
-# - GeminiLLMProvider -> providers/gemini.py
-# - GroqLLMProvider -> providers/groq.py
-# - StaticFallbackProvider -> providers/static.py
+from app.providers_factory import (
+    create_primary_provider,
+    create_secondary_provider,
+    create_fallback_provider,
+    get_provider_factory,
+    ProviderFactory,
+)
 
 
 class ConversationStore(ABC):
@@ -384,8 +382,8 @@ class RAGChatService:
         
         # Initialize LLM Router with multi-layer fallback
         if llm_router is None:
-            primary = GeminiLLMProvider()
-            secondary = GroqLLMProvider() if settings.groq_api_key else None
+            primary = create_primary_provider()
+            secondary = create_secondary_provider() if settings.groq_api_key else None
             self.llm_router = LLMRouter(
                 primary=primary,
                 secondary=secondary,
