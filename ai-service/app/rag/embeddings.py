@@ -186,17 +186,18 @@ class PostgreSQLEmbeddingRepository(EmbeddingRepository):
             List of similar documents with scores
         """
         embedding_str = '[' + ','.join(map(str, query_embedding)) + ']'
+        dim = settings.embedding_dimension
         
         results = self.db.execute(
-            """
+            f"""
             SELECT 
                 id,
                 content,
                 metadata,
-                1 - (embedding <=> %s::vector(768)) as similarity
+                1 - (embedding <=> %s::vector({dim})) as similarity
             FROM embeddings
-            WHERE 1 - (embedding <=> %s::vector(768)) > %s
-            ORDER BY embedding <=> %s::vector(768)
+            WHERE 1 - (embedding <=> %s::vector({dim})) > %s
+            ORDER BY embedding <=> %s::vector({dim})
             LIMIT %s
             """,
             (embedding_str, embedding_str, threshold, embedding_str, limit)

@@ -29,9 +29,9 @@ class Settings(BaseSettings):
     gemini_api_key: str = Field(..., env="GEMINI_API_KEY")
     groq_api_key: Optional[str] = Field(default=None, env="GROQ_API_KEY")
     groq_model: str = Field(default="llama-3.3-70b-versatile", env="GROQ_MODEL")
-    embedding_model: str = Field(default="models/embedding-001", env="EMBEDDING_MODEL")
+    embedding_model: str = Field(default="models/gemini-embedding-001", env="EMBEDDING_MODEL")
     chat_model: str = Field(default="models/gemini-1.5-flash", env="CHAT_MODEL")
-    embedding_dimension: int = Field(default=768, env="EMBEDDING_DIMENSION")
+    embedding_dimension: int = Field(default=3072, env="EMBEDDING_DIMENSION")
     
     # Redis Configuration
     redis_host: str = Field(default="redis", env="REDIS_HOST")
