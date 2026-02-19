@@ -163,6 +163,14 @@ services:
       - QUEUE_CONNECTION=redis
       - AI_SERVICE_URL=http://ai-service:8000
       - SCRAPER_SERVICE_URL=http://scraper-service:8000
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     volumes:
       - ./business-core:/var/www/html
     depends_on:
