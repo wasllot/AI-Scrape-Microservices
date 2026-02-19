@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
+
+use App\Models\Contact;
+
 class ContactController extends Controller
 {
     /**
@@ -35,22 +38,48 @@ class ContactController extends Controller
         $data = $validator->validated();
 
         try {
+            // Save to database
+            $contact = Contact::create($data);
+
             // Send email to the site owner (configured in .env)
             $recipient = config('mail.from.address');
 
-            Mail::to($recipient)->send(new ContactFormMail($data));
+            if ($recipient) {
+                try {
+                    Mail::to($recipient)->send(new ContactFormMail($data));
+                } catch (\Exception $e) {
+                    // Log email error but don't fail the request if contact is saved
+                    // Log::error('Failed to send contact email: ' . $e->getMessage());
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Message sent successfully!'
+                'message' => 'Message sent successfully!',
+                'data' => $contact
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send message. Please try again later.',
+                'message' => 'Failed to save message. Please try again later.',
                 'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
+    }
+
+    /**
+     * List all contact form submissions.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index()
+    {
+        $contacts = Contact::orderBy('created_at', 'desc')->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => $contacts
+        ], 200);
     }
 }

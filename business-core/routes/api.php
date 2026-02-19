@@ -19,6 +19,8 @@ Route::get('/system-status', [SystemHealthController::class, 'check']);
 Route::post('/chat', [ChatController::class, 'chat']);
 Route::post('/chat/welcome', [ChatController::class, 'welcome']);
 Route::post('/contact', [ContactController::class, 'submit']);
+Route::get('/contacts', [ContactController::class, 'index']);
+
 
 Route::prefix('scrape')->group(function () {
     Route::post('/learn', [ScrapeController::class, 'scrapeAndLearn']);
