@@ -23,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        if ($this->app->runningInConsole()) {
+            if (!$this->app->bound('view')) {
+                $this->app->register(\Illuminate\View\ViewServiceProvider::class);
+            }
+        }
         // Bind HTTP Client Interface
         $this->app->singleton(HttpClientInterface::class, function ($app) {
             return new LaravelHttpClient(
