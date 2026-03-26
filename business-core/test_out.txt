@@ -1,0 +1,92 @@
+
+   WARN  No code coverage driver available
+
+   FAIL  Tests\Feature\Api\V1\ProductApiTest
+  ⨯ can list products
+  ⨯ can list featured products
+  ⨯ can get single product not found
+  ⨯ can create product when authenticated
+  ─────────────────────────────────────────────  
+   FAILED  Tests\Feature\Api…  QueryException   
+  could not find driver (Connection: pgsql, SQL: select exists (select 1 from pg_class c, pg_namespace n where n.nspname = 'public' and c.relname = 'migrations' and c.relkind in ('r', 'p') and n.oid = c.relnamespace))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:66
+      NunoMaduro\Collision\Exceptions\TestException::("could not find driver")
+
+  ─────────────────────────────────────────────  
+   FAILED  Tests\Feature\Api…  QueryException   
+  could not find driver (Connection: pgsql, SQL: select exists (select 1 from pg_class c, pg_namespace n where n.nspname = 'public' and c.relname = 'migrations' and c.relkind in ('r', 'p') and n.oid = c.relnamespace))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:66
+      NunoMaduro\Collision\Exceptions\TestException::("could not find driver")
+
+  ─────────────────────────────────────────────  
+   FAILED  Tests\Feature\Api…  QueryException   
+  could not find driver (Connection: pgsql, SQL: select exists (select 1 from pg_class c, pg_namespace n where n.nspname = 'public' and c.relname = 'migrations' and c.relkind in ('r', 'p') and n.oid = c.relnamespace))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:66
+      NunoMaduro\Collision\Exceptions\TestException::("could not find driver")
+
+  ─────────────────────────────────────────────  
+   FAILED  Tests\Feature\Api…  QueryException   
+  could not find driver (Connection: pgsql, SQL: select exists (select 1 from pg_class c, pg_namespace n where n.nspname = 'public' and c.relname = 'migrations' and c.relkind in ('r', 'p') and n.oid = c.relnamespace))
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+    821▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    822▕                 );
+    823▕             }
+    824▕ 
+  ➜ 825▕             throw new QueryException(
+    826▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    827▕             );
+    828▕         }
+    829▕     }
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:825
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connectors\Connector.php:66
+      NunoMaduro\Collision\Exceptions\TestException::("could not find driver")
+
+
+  Tests:    4 failed (0 assertions)
+  Duration: 1.44s
+

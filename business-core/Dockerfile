@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
+    libicu-dev \
     zip \
     unzip \
     nginx \
@@ -17,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd intl
 
 # Install Redis extension
 RUN pecl install redis && docker-php-ext-enable redis
@@ -32,7 +33,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 # Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -43,6 +44,11 @@ COPY docker/nginx.conf /etc/nginx/sites-available/default
 # Copy supervisor config
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 80
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+

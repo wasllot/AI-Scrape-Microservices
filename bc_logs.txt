@@ -1,0 +1,100 @@
+﻿business-core  | ÔÜí Optimizing...
+business-core  | 
+business-core  |    INFO  Configuration cached successfully.  
+business-core  | 
+business-core  | 
+business-core  |    INFO  Routes cached successfully.  
+business-core  | 
+business-core  | Ô£à Startup complete ÔÇô launching supervisord
+business-core  | ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+business-core  | 2026-03-21 19:58:12,001 INFO Set uid to user 0 succeeded
+business-core  | 2026-03-21 19:58:12,012 INFO supervisord started with pid 1
+business-core  | 2026-03-21 19:58:13,015 INFO spawned: 'nginx' with pid 41
+business-core  | 2026-03-21 19:58:13,017 INFO spawned: 'php-fpm' with pid 42
+business-core  | [21-Mar-2026 19:58:13] NOTICE: fpm is running, pid 42
+business-core  | [21-Mar-2026 19:58:13] NOTICE: ready to handle connections
+business-core  | 2026-03-21 19:58:14,102 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+business-core  | 2026-03-21 19:58:14,102 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+business-core  | 127.0.0.1 -  21/Mar/2026:20:28:03 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:20:28:34 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  21/Mar/2026:21:06:06 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  21/Mar/2026:21:08:30 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:08:56 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:08:56 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:08:56 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:09:00 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:09:00 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:09:00 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:09:00 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  21/Mar/2026:21:11:50 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:12:17 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  21/Mar/2026:21:18:42 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:21:19:08 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  21/Mar/2026:23:42:11 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  21/Mar/2026:23:42:43 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:31:58 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:00:32:13 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:32:48 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:32:47 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:32:52 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:00:33:03 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:33:01 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:00:33:01 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:11:37:48 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:03 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:03 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:03 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:04 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:13 +0000 "GET /index.php" 200
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:13 +0000 "GET /index.php" 404
+business-core  | 127.0.0.1 -  22/Mar/2026:11:38:12 +0000 "GET /index.php" 404
+business-core  | ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+business-core  |   Business Core ÔÇô Startup
+business-core  | ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+business-core  | ­ƒôª Installing composer dependencies...
+business-core  | Installing dependencies from lock file (including require-dev)
+business-core  | Verifying lock file contents can be installed on current platform.
+business-core  | Nothing to install, update or remove
+business-core  | Generating optimized autoload files
+business-core  | > Illuminate\Foundation\ComposerScripts::postAutoloadDump
+business-core  | > @php artisan package:discover --ansi
+business-core  | 
+business-core  |   [37;44m INFO [39;49m Discovering packages.  
+business-core  | 
+business-core  |   darkaonline/l5-swagger [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   laravel/pail [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   laravel/sail [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   laravel/tinker [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   nesbot/carbon [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   nunomaduro/collision [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   nunomaduro/termwind [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  |   php-open-source-saver/jwt-auth [90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m[90m.[39m [32;1mDONE[39;22m
+business-core  | 
+business-core  | 85 packages you are using are looking for funding.
+business-core  | Use the `composer fund` command to find out more!
+business-core  | ­ƒøá  Running migrations...
+business-core  | 
+business-core  |    INFO  Nothing to migrate.  
+business-core  | 
+business-core  | ­ƒî▒ Seeding admin user...
+business-core  | 
+business-core  |    INFO  Seeding database.  
+business-core  | 
+business-core  | Admin user ensured: admin@example.com
+business-core  | ÔÜí Optimizing...
+business-core  | 
+business-core  |    INFO  Configuration cached successfully.  
+business-core  | 
+business-core  | 
+business-core  |    INFO  Routes cached successfully.  
+business-core  | 
+business-core  | Ô£à Startup complete ÔÇô launching supervisord
+business-core  | ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+business-core  | 2026-03-26 19:33:19,548 INFO Set uid to user 0 succeeded
+business-core  | 2026-03-26 19:33:19,565 INFO supervisord started with pid 1
+business-core  | 2026-03-26 19:33:20,579 INFO spawned: 'nginx' with pid 40
+business-core  | 2026-03-26 19:33:20,592 INFO spawned: 'php-fpm' with pid 41
+business-core  | [26-Mar-2026 19:33:20] NOTICE: fpm is running, pid 41
+business-core  | [26-Mar-2026 19:33:20] NOTICE: ready to handle connections
+business-core  | 2026-03-26 19:33:21,926 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+business-core  | 2026-03-26 19:33:21,944 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

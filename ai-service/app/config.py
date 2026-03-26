@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     # Application Configuration
     app_name: str = Field(default="AI & RAG Engine", env="APP_NAME")
     debug: bool = Field(default=False, env="DEBUG")
-    allowed_origins: str = Field(default="http://localhost:3000", env="ALLOWED_ORIGINS")
+    allowed_origins: str = Field(default="http://localhost:3000,https://tubeflow-dev.vercel.app", env="ALLOWED_ORIGINS")
     
     # Rate Limiting
     rate_limit_enabled: bool = Field(default=True, env="RATE_LIMIT_ENABLED")

@@ -25,6 +25,13 @@ health_checker = HealthChecker("ai-service")
 
 # ... imports ...
 
+from app.writing.service import ScriptWriterService
+
+# Dependency injection for ScriptWriterService
+def get_writing_service() -> ScriptWriterService:
+    """Dependency injection for ScriptWriterService."""
+    return ScriptWriterService()
+
 app = FastAPI(
     # ... attributes ...
 )
@@ -640,6 +647,287 @@ async def delete_embedding(
             "success": True,
             "message": f"Embedding {embedding_id} deleted"
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
+# Writing/Script Improvement Endpoints
+# ============================================
+
+class WritingImproveRequest(BaseModel):
+    """Request model for script improvement"""
+    content: str = Field(..., description="Contenido del guión a mejorar", min_length=1)
+    tone: Optional[str] = Field(default="professional", description="Tono deseado: formal, professional, casual, dynamic, friendly, authoritative")
+    target_audience: Optional[str] = Field(default="general", description="Audiencia objetivo")
+    purpose: Optional[str] = Field(default=None, description="Propósito del guión")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "content": "Mi nombre es Juan y soy desarrollador...",
+                "tone": "professional",
+                "target_audience": "reclutadores",
+                "purpose": "presentacion personal"
+            }
+        }
+
+
+class WritingStructureRequest(BaseModel):
+    """Request model for structure improvement"""
+    content: str = Field(..., description="Contenido del guión a reestructurar", min_length=1)
+    technique: Optional[str] = Field(default="storytelling", description="Técnica: storytelling, aida, pas, hero_journey, three_act, inverted_pyramid, rule_of_three")
+    tone: Optional[str] = Field(default="professional", description="Tono deseado")
+    target_audience: Optional[str] = Field(default="general", description="Audiencia objetivo")
+
+
+class WritingToneRequest(BaseModel):
+    """Request model for tone change"""
+    content: str = Field(..., description="Contenido del guión", min_length=1)
+    tone: str = Field(..., description="Nuevo tono: formal, professional, casual, dynamic, friendly, authoritative")
+
+
+class WritingExpandRequest(BaseModel):
+    """Request model for script expansion"""
+    content: str = Field(..., description="Contenido a expandir", min_length=1)
+    factor: Optional[str] = Field(default="medium", description="Factor: short (30%), medium (50%), long (100%)")
+
+
+class WritingSummarizeRequest(BaseModel):
+    """Request model for summarization"""
+    content: str = Field(..., description="Contenido a resumir", min_length=1)
+    length: Optional[str] = Field(default="medium", description="Longitud: short (20%), medium (35%), long (50%)")
+
+
+class WritingAdaptRequest(BaseModel):
+    """Request model for format adaptation"""
+    content: str = Field(..., description="Contenido a adaptar", min_length=1)
+    format_type: str = Field(..., description="Formato destino: video, podcast, linkedin, presentation")
+    target_audience: Optional[str] = Field(default="general", description="Audiencia objetivo")
+
+
+class WritingAnalyzeRequest(BaseModel):
+    """Request model for quality analysis"""
+    content: str = Field(..., description="Contenido a analizar", min_length=1)
+    keywords: Optional[List[str]] = Field(default=None, description="Palabras clave para análisis SEO")
+
+
+@app.post(
+    "/writing/improve",
+    summary="Mejorar Guión",
+    description="Mejora un guión existente con mejor fluidez, gramática y engagement",
+    tags=["Script Writing"]
+)
+async def improve_script(
+    request: WritingImproveRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Mejora un guión existente.
+    
+    - **content**: El guión original
+    - **tone**: Tono deseado (formal, professional, casual, dynamic, friendly, authoritative)
+    - **target_audience**: Audiencia objetivo
+    - **purpose**: Propósito opcional del guión
+    """
+    try:
+        result = await service.improve(
+            content=request.content,
+            tone=request.tone,
+            target_audience=request.target_audience,
+            purpose=request.purpose
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/structure",
+    summary="Reestructurar con Técnica",
+    description="Reestructura el guión usando una técnica específica de escritura",
+    tags=["Script Writing"]
+)
+async def improve_structure(
+    request: WritingStructureRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Reestructura el guión usando técnicas narrativas avanzadas.
+    
+    Técnicas disponibles:
+    - **storytelling**: Narrativa con personajes y arco dramático
+    - **aida**: Atención → Interés → Deseo → Acción
+    - **pas**: Problema → Agitación → Solución
+    - **hero_journey**: Viaje del héroe (12 pasos)
+    - **three_act**: Setup → Confrontation → Resolution
+    - **inverted_pyramid**: Conclusión primero
+    - **rule_of_three**: Tres puntos clave por sección
+    """
+    try:
+        result = await service.improve_structure(
+            content=request.content,
+            technique=request.technique,
+            tone=request.tone,
+            target_audience=request.target_audience
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/tone",
+    summary="Cambiar Tono",
+    description="Cambia el tono del guión sin modificar el contenido",
+    tags=["Script Writing"]
+)
+async def change_tone(
+    request: WritingToneRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Cambia el tono del guión.
+    
+    Tonos disponibles: formal, professional, casual, dynamic, friendly, authoritative
+    """
+    try:
+        result = await service.change_tone(
+            content=request.content,
+            tone=request.tone
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/expand",
+    summary="Expandir Guión",
+    description="Expande el guión añadiendo más detalles y contexto",
+    tags=["Script Writing"]
+)
+async def expand_script(
+    request: WritingExpandRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Expande el guión manteniendo su esencia.
+    
+    Factores: short (30%), medium (50%), long (100%)
+    """
+    try:
+        result = await service.expand(
+            content=request.content,
+            factor=request.factor
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/summarize",
+    summary="Resumir Guión",
+    description="Resume el guión manteniendo los puntos esenciales",
+    tags=["Script Writing"]
+)
+async def summarize_script(
+    request: WritingSummarizeRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Resume el guión.
+    
+    Longitudes: short (20%), medium (35%), long (50%)
+    """
+    try:
+        result = await service.summarize(
+            content=request.content,
+            length=request.length
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/adapt",
+    summary="Adaptar Formato",
+    description="Adapta el guión a un formato específico",
+    tags=["Script Writing"]
+)
+async def adapt_format(
+    request: WritingAdaptRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Adapta el guión a diferentes formatos.
+    
+    Formatos:
+    - **video**: Script con hooks, transiciones y CTAs
+    - **podcast**: Formato conversacional con notas de audio
+    - **linkedin**: Post optimizado para LinkedIn
+    - **presentation**: Slides con notas del speaker
+    """
+    try:
+        result = await service.adapt_format(
+            content=request.content,
+            format_type=request.format_type,
+            target_audience=request.target_audience
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post(
+    "/writing/analyze",
+    summary="Analizar Calidad",
+    description="Analiza la calidad del guión (legibilidad, SEO, estructura, duración)",
+    tags=["Script Writing"]
+)
+async def analyze_script(
+    request: WritingAnalyzeRequest,
+    service: ScriptWriterService = Depends(get_writing_service),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Analiza la calidad del guión.
+    
+    Incluye:
+    - Legibilidad (Flesch-Kincaid, Flesch Reading Ease)
+    - Estructura (intro, desarrollo, conclusión)
+    - SEO (densidad de keywords, estructura de encabezados)
+    - Duración estimada (lectura y speaking)
+    - Flags de calidad (clichés, redundancia, voz pasiva)
+    """
+    try:
+        result = await service.analyze(
+            content=request.content,
+            keywords=request.keywords
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
