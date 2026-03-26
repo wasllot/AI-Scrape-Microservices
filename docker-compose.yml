@@ -118,6 +118,11 @@ services:
       - AI_SERVICE_URL=http://ai-service:8000
       - SCRAPER_SERVICE_URL=http://scraper-service:8000
       - JWT_SECRET=${JWT_SECRET_KEY}
+      - JWT_TTL=${JWT_TTL:-60}
+      - ADMIN_NAME=${ADMIN_NAME:-Admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-change_me_in_production}
+
       - MAIL_MAILER=${MAIL_MAILER:-smtp}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT:-587}
@@ -196,6 +201,26 @@ services:
     volumes:
       - ./scraper-service:/app
       - scraper_cache:/app/cache
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  # ============================================
+  # Media Service (Node.js + BullMQ)
+  # ============================================
+  media-service:
+    build:
+      context: ./media-service
+      dockerfile: Dockerfile
+    container_name: media-service
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NODE_ENV=production
+    ports:
+      - "8003:8000"
     depends_on:
       redis:
         condition: service_healthy

@@ -14,6 +14,7 @@ graph TB
         Laravel[Business Core<br/>Laravel 11<br/>/app/*]
         AI[AI & RAG Engine<br/>FastAPI + Gemini<br/>/ai/*]
         Scraper[Universal Scraper<br/>Playwright<br/>/scraper/*]
+        Media[Media Service<br/>Node.js + BullMQ<br/>/media/*]
     end
     
     subgraph "Infrastructure"
@@ -24,6 +25,7 @@ graph TB
     Traefik -->|api.reinaldotineo.com/app| Laravel
     Traefik -->|api.reinaldotineo.com/ai| AI
     Traefik -->|api.reinaldotineo.com/scraper| Scraper
+    Traefik -->|api.reinaldotineo.com/media| Media
     
     Laravel -->|HTTP Client| AI
     Laravel -->|HTTP Client| Scraper
@@ -35,10 +37,13 @@ graph TB
     
     Scraper --> Redis
     
+    Media --> Redis
+    
     style Traefik fill:#ff6b6b
     style AI fill:#4ecdc4
     style Laravel fill:#45b7d1
     style Scraper fill:#96ceb4
+    style Media fill:#f39c12
 ```
 
 ## 📋 Servicios
@@ -70,6 +75,14 @@ Extractor de datos con renderizado JavaScript.
 - `POST /scraper/scrape/job-posting`: Scraping especializado de ofertas
 - Soporte Playwright para JavaScript
 - BeautifulSoup para parsing HTML
+
+### 🎬 Media Service (`/media/*`)
+Motor de procesamiento de contenido multimedia asíncrono.
+
+**Funcionalidades:**
+- `POST /media/process`: Encola tareas de procesamiento (Audio, Video, Imágenes).
+- Arquitectura asíncrona basada en Node.js, Express y **BullMQ** sobre Redis.
+- Procesadores con principios SOLID usando `fluent-ffmpeg` y `sharp`.
 
 ## 🚀 Inicio Rápido
 
@@ -110,6 +123,7 @@ docker-compose up -d
 curl http://localhost/ai/health
 curl http://localhost/app/health
 curl http://localhost/scraper/health
+curl http://localhost/media/health
 ```
 
 ## 📚 Ejemplos de Uso
@@ -220,6 +234,7 @@ microservices/
 - **AI Service**: http://localhost/ai
 - **Business Core**: http://localhost/app
 - **Scraper Service**: http://localhost/scraper
+- **Media Service**: http://localhost/media
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
 
