@@ -21,4 +21,8 @@ return [
         'droplet_id' => env('DIGITALOCEAN_DROPLET_ID'),
     ],
 
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
 ];
