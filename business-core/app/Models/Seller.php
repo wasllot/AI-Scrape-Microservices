@@ -20,6 +20,11 @@ class Seller extends Model
         'rut',
         'bank_account',
         'bank_name',
+        'whatsapp',
+        'contact_email',
+        'website',
+        'address',
+        'categories',
         'status',
         'rejection_reason',
         'commission_rate',
@@ -32,6 +37,7 @@ class Seller extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'categories'  => 'array',
         ];
     }
 

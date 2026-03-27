@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\SellerController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ServiceController;
 use App\Http\Controllers\Api\V1\UploadController;
+use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -124,6 +125,29 @@ Route::prefix('v1')->group(function () {
             Route::post('/apply', [SellerController::class, 'apply']);
             Route::get('/me', [SellerController::class, 'me']);
             Route::put('/me', [SellerController::class, 'update']);
+            // Seller product management
+            Route::get('/me/products', [SellerController::class, 'myProducts']);
+            Route::post('/me/products', [SellerController::class, 'myProductCreate']);
+            Route::put('/me/products/{id}', [SellerController::class, 'myProductUpdate']);
+            Route::delete('/me/products/{id}', [SellerController::class, 'myProductDelete']);
+        });
+
+        // ── Admin routes ─────────────────────────────────────────────────────
+        Route::prefix('admin')->group(function () {
+            // Store management
+            Route::get('/stores', [AdminController::class, 'storeIndex']);
+            Route::get('/stores/{id}', [AdminController::class, 'storeShow']);
+            Route::post('/stores', [AdminController::class, 'storeCreate']);
+            Route::put('/stores/{id}', [AdminController::class, 'storeUpdate']);
+            Route::delete('/stores/{id}', [AdminController::class, 'storeDelete']);
+            Route::post('/stores/{id}/approve', [AdminController::class, 'storeApprove']);
+            Route::post('/stores/{id}/impersonate', [AdminController::class, 'storeImpersonate']);
+            // Product management
+            Route::get('/products', [AdminController::class, 'productIndex']);
+            Route::post('/products', [AdminController::class, 'productCreate']);
+            Route::put('/products/{id}', [AdminController::class, 'productUpdate']);
+            Route::delete('/products/{id}', [AdminController::class, 'productDelete']);
         });
     });
 });
+

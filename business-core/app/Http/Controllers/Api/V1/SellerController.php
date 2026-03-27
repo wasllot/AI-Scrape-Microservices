@@ -167,12 +167,18 @@ class SellerController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'store_name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'logo' => 'nullable|string',
-            'banner' => 'nullable|string',
-            'bank_account' => 'nullable|string',
-            'bank_name' => 'nullable|string|max:100',
+            'store_name'    => 'sometimes|string|max:255',
+            'description'   => 'nullable|string',
+            'logo'          => 'nullable|string',
+            'banner'        => 'nullable|string',
+            'whatsapp'      => 'nullable|string|max:30',
+            'contact_email' => 'nullable|email',
+            'website'       => 'nullable|string',
+            'address'       => 'nullable|string|max:255',
+            'categories'    => 'nullable|array',
+            'categories.*'  => 'integer',
+            'bank_account'  => 'nullable|string',
+            'bank_name'     => 'nullable|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -183,5 +189,96 @@ class SellerController extends Controller
 
         return response()->json(['success' => true, 'data' => $seller]);
     }
-}
 
+    // ──────────────────────────────────────────────
+    // SELLER — PRODUCT MANAGEMENT
+    // ──────────────────────────────────────────────
+
+    /** List this seller's own products */
+    public function myProducts(Request $request)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json(['success' => false, 'message' => 'Not a seller'], 403);
+        }
+
+        $products = $seller->products()
+            ->with(['category:id,name', 'images'])
+            ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($request->is_active !== null, fn($q) => $q->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN)))
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->per_page ?? 20);
+
+        return response()->json(['success' => true, 'data' => $products]);
+    }
+
+    /** Create a product in this seller's store */
+    public function myProductCreate(Request $request)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller || !$seller->isApproved()) {
+            return response()->json(['success' => false, 'message' => 'Approved seller account required'], 403);
+        }
+
+        $validated = $request->validate([
+            'name'           => 'required|string|max:255',
+            'description'    => 'nullable|string',
+            'category_id'    => 'nullable|exists:categories,id',
+            'price'          => 'required|numeric|min:0',
+            'cost_price'     => 'nullable|numeric|min:0',
+            'compare_price'  => 'nullable|numeric|min:0',
+            'stock_quantity' => 'required|integer|min:0',
+            'sku'            => 'nullable|string|unique:products',
+            'is_active'      => 'boolean',
+            'is_featured'    => 'boolean',
+        ]);
+
+        $product = $seller->products()->create([
+            ...$validated,
+            'slug'   => \Illuminate\Support\Str::slug($validated['name']),
+            'source' => 'own',
+        ]);
+
+        return response()->json(['success' => true, 'data' => $product, 'message' => 'Product created'], 201);
+    }
+
+    /** Update one of this seller's products */
+    public function myProductUpdate(Request $request, int $id)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json(['success' => false, 'message' => 'Not a seller'], 403);
+        }
+
+        $product = $seller->products()->findOrFail($id);
+
+        $validated = $request->validate([
+            'name'           => 'sometimes|string|max:255',
+            'description'    => 'nullable|string',
+            'category_id'    => 'nullable|exists:categories,id',
+            'price'          => 'sometimes|numeric|min:0',
+            'cost_price'     => 'nullable|numeric|min:0',
+            'compare_price'  => 'nullable|numeric|min:0',
+            'stock_quantity' => 'sometimes|integer|min:0',
+            'is_active'      => 'sometimes|boolean',
+            'is_featured'    => 'sometimes|boolean',
+        ]);
+
+        $product->update($validated);
+
+        return response()->json(['success' => true, 'data' => $product, 'message' => 'Product updated']);
+    }
+
+    /** Delete one of this seller's products */
+    public function myProductDelete(Request $request, int $id)
+    {
+        $seller = $request->user()->seller;
+        if (!$seller) {
+            return response()->json(['success' => false, 'message' => 'Not a seller'], 403);
+        }
+
+        $seller->products()->findOrFail($id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Product deleted']);
+    }
+}

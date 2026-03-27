@@ -136,3 +136,114 @@ Para que el backend sea más rápido, todas las imágenes se suben primero a est
         }
         ```
     *   **Paso Siguiente:** Copia el campo `.url` devuelto, y úsalo en tu siguiente `POST /api/v1/products` en el campo "image" o similar.
+
+---
+
+## 6. Dashboard de Vendedor (Protegido — Rol Seller)
+**Header Requerido:** `Authorization: Bearer <token_del_vendedor>`
+
+### Perfil de la Tienda
+*   **Ver datos de mi Tienda:**
+    *   **Método:** `GET`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me`
+*   **Actualizar datos de mi Tienda:**
+    *   **Método:** `PUT`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me`
+    *   **Payload (Body JSON):**
+        ```json
+        {
+          "store_name": "Mi Tienda",
+          "description": "Descripción de la tienda",
+          "logo": "https://r2.dev/logo.png",
+          "banner": "https://r2.dev/banner.png",
+          "whatsapp": "+584141234567",
+          "contact_email": "tienda@example.com",
+          "website": "https://mitienda.com",
+          "address": "Av. Principal, Local 1",
+          "categories": [1, 3],
+          "bank_account": "0105-...",
+          "bank_name": "Banco de Venezuela"
+        }
+        ```
+
+### Gestión de Productos (Solo los de la tienda propia)
+*   **Listar mis Productos:**
+    *   **Método:** `GET`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me/products`
+    *   **Query Params Opcionales:** `?search=laptop&is_active=true&per_page=20`
+*   **Crear un Producto en mi Tienda:**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me/products`
+    *   **Payload (Body JSON):** `{ "name": "Laptop Pro", "price": 999.99, "stock_quantity": 10, "category_id": 1 }`
+*   **Actualizar un Producto:**
+    *   **Método:** `PUT`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me/products/{id}`
+    *   **Payload (Body JSON):** `{ "price": 849.99, "stock_quantity": 5, "is_active": true }`
+*   **Eliminar un Producto:**
+    *   **Método:** `DELETE`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/sellers/me/products/{id}`
+
+---
+
+## 7. Panel de Administración (Protegido — Rol Admin)
+**Header Requerido:** `Authorization: Bearer <token_del_admin>`
+
+> [!IMPORTANT]
+> Todos estos endpoints responden con `403 Forbidden` si el token no pertenece a un usuario de rol `admin`.
+
+### Gestión de Tiendas
+*   **Listar Todas las Tiendas (con filtros):**
+    *   **Método:** `GET`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores`
+    *   **Query Params:** `?status=pending&search=tienda&category=1&per_page=20`
+*   **Ver Detalle de una Tienda:**
+    *   **Método:** `GET`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores/{id}`
+*   **Crear una Tienda (con nuevo usuario Vendedor):**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores`
+    *   **Payload (Body JSON):**
+        ```json
+        {
+          "store_name": "Nueva Tienda Oficial",
+          "description": "Descripción...",
+          "logo": "https://r2.dev/logo.png",
+          "categories": [1, 2],
+          "whatsapp": "+584141234567",
+          "contact_email": "contacto@tienda.com",
+          "user_name": "Juan Pérez",
+          "user_email": "juan@tienda.com",
+          "user_password": "password123"
+        }
+        ```
+*   **Editar cualquier Tienda:**
+    *   **Método:** `PUT`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores/{id}`
+    *   **Payload:** Cualquier campo de la tienda, incluyendo `status: "suspended"`.
+*   **Eliminar una Tienda:**
+    *   **Método:** `DELETE`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores/{id}`
+*   **Aprobar Tienda Pendiente:**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores/{id}/approve`
+*   **🔑 Impersonar / Logearse como Tienda:**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/stores/{id}/impersonate`
+    *   **Respuesta:** Devuelve un `access_token` JWT del usuario vendedor de esa tienda. El frontend puede usar ese token para acceder al dashboard de la tienda directamente.
+
+### Gestión de Productos (Cualquier Tienda)
+*   **Listar Todos los Productos (con filtros):**
+    *   **Método:** `GET`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/products`
+    *   **Query Params:** `?seller_id=3&category_id=1&search=laptop&per_page=30`
+*   **Crear Producto para cualquier Tienda:**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/products`
+    *   **Payload:** `{ "seller_id": 3, "name": "Producto", "price": 99.99, "stock_quantity": 50 }`
+*   **Actualizar cualquier Producto:**
+    *   **Método:** `PUT`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/products/{id}`
+*   **Eliminar cualquier Producto:**
+    *   **Método:** `DELETE`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/admin/products/{id}`
+
