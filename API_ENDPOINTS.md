@@ -111,3 +111,28 @@ Para que los clientes puedan añadir items al carrito o pagar, el Frontend debe 
     *   **Método:** `POST`
     *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/wishlist`
     *   **Payload (Body JSON):** `{ "product_id": 1 }`
+
+---
+
+## 5. Multimedia (Archivos con R2)
+**Header Requerido:** `Authorization: Bearer <tu_token_aqui>`
+
+Para que el backend sea más rápido, todas las imágenes se suben primero a este endpoint, y **luego** se envía la URL devuelta (String) cuando se cree un Producto, Categoría o Perfil.
+
+*   **Subir una nueva Imagen O Logo:**
+    *   **Método:** `POST`
+    *   **URL Completa:** `https://api.reinaldotineo.online/api/v1/upload/image`
+    *   **Payload (Form-Data `multipart/form-data`):** 
+        *   `image`: [El archivo físico `File/Blob`]
+        *   `folder`: `"products"` (Opciones válidas: `products`, `categories`, `sellers`, `avatars`)
+    *   **Respuesta Exitosa:**
+        ```json
+        {
+            "success": true,
+            "data": {
+                "path": "products/1234_1234.jpg",
+                "url": "https://pub-xxxx.r2.dev/products/1234_1234.jpg"
+            }
+        }
+        ```
+    *   **Paso Siguiente:** Copia el campo `.url` devuelto, y úsalo en tu siguiente `POST /api/v1/products` en el campo "image" o similar.
