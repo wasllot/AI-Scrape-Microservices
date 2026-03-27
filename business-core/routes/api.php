@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\SellerController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ServiceController;
+use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -82,6 +83,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [UserController::class, 'profile']);
             Route::get('/profile', [UserController::class, 'profile']);
             Route::put('/profile', [UserController::class, 'updateProfile']);
+        });
+
+        Route::prefix('upload')->group(function () {
+            Route::post('/image', [UploadController::class, 'image']);
         });
 
         Route::prefix('wishlist')->group(function () {
